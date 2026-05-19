@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dr. Yasmeen - Clinical Cases</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- html2canvas for capturing cards -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Lato', sans-serif;
+      background: #f4f9fd;
+      color: #0b3c5d;
+      line-height: 1.6;
+    }
+    h1, h2, h3 { font-family: 'Poppins', sans-serif; font-weight: 700; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* hero */
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(11,60,93,0.85) 0%, rgba(11,60,93,0.7) 100%), 
+                  url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80') center/cover no-repeat;
+      min-height: 70vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #fff;
+      padding: 2rem;
+    }
+    .hero-content { max-width: 800px; }
+    .hero-content h1 {
+      font-size: 3.5rem;
+      margin-bottom: 1.5rem;
+      text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+    }
+    .hero-content p {
+      font-size: 1.2rem;
+      margin-bottom: 2.5rem;
+      font-weight: 300;
+    }
+    #grad-countdown-container {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin: 3rem 0;
+      flex-wrap: wrap;
+    }
+    .count-item {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+      min-width: 120px;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .count-number {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .count-label {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    /* Slider section */
+    .slider-section { margin: 4rem 0; text-align: center; }
+    .slider-section h2 { margin-bottom: 2rem; }
+    .slider-container {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: 30px;
+      box-shadow: 0 20px 40px rgba(11,60,93,0.1);
+      background: #fff;
+    }
+    .slider-track {
+      display: flex;
+      transition: transform 0.5s ease;
+    }
+    .slider-card {
+      min-width: 100%;
+      padding: 2.5rem 2.5rem 2rem;
+      background: #fff;
+      text-align: left;
+    }
+    .case-title {
+      font-size: 1.6rem;
+      margin-bottom: 1.5rem;
+      color: #0b3c5d;
+      border-bottom: 2px solid #e0edf5;
+      padding-bottom: 0.8rem;
+    }
+    .case-presentation {
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+      color: #1e3b4f;
+      line-height: 1.7;
+      background: #f0f6fb;
+      padding: 1.2rem;
+      border-radius: 12px;
+      border-left: 4px solid #0b3c5d;
+    }
+    .hidden-section {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, margin 0.3s ease, padding 0.3s ease;
+      margin-top: 0;
+      opacity: 0;
+    }
+    .hidden-section.visible {
+      max-height: 300px;
+      margin-top: 1.5rem;
+      opacity: 1;
+    }
+    .reveal-btn, .capture-btn {
+      background: #0b3c5d;
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.8rem;
+      border-radius: 30px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .capture-btn {
+      background: #2e7d32;
+      margin-top: 2rem;
+      display: block;
+      width: 100%;
+      justify-content: center;
+    }
+    .capture-btn:hover {
+      background: #1b5e20;
+      transform: translateY(-2px);
+    }
+    .reveal-btn:hover {
+      background: #09445a;
+      transform: translateY(-2px);
+    }
+    .history-box, .investigations-box, .diagnosis-box {
+      background: #f9fdff;
+      padding: 1.2rem;
+      border-radius: 12px;
+      border: 1px solid #d1e3ef;
+      margin-top: 1rem;
+    }
+    .diagnosis-box {
+      background: #e6f7e6;
+      border-color: #a3d9a5;
+    }
+
+    /* Slider arrows & dots */
+    .slider-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(11,60,93,0.8);
+      color: #fff;
+      border: none;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s;
+      z-index: 2;
+    }
+    .slider-arrow:hover { background: #0b3c5d; }
+    .slider-arrow.prev { left: 20px; }
+    .slider-arrow.next { right: 20px; }
+    .slider-dots {
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+      margin-top: 1.5rem;
+    }
+    .slider-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #c0d6e4;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .slider-dot.active { background: #0b3c5d; }
+
+    /* about */
+    .about-section {
+      background: #fff;
+      border-radius: 30px;
+      padding: 3rem;
+      margin: 4rem 0;
+      box-shadow: 0 15px 35px rgba(11,60,93,0.06);
+    }
+    footer { text-align: center; padding: 2rem; color: #7a9baf; margin-top: 4rem; }
+
+    @media (max-width: 768px) {
+      .hero-content h1 { font-size: 2.5rem; }
+      .count-item { min-width: 100px; padding: 1rem; }
+      .slider-card { padding: 2rem 1.5rem; }
+      .slider-arrow { width: 35px; height: 35px; font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <section class="hero-banner">
+    <div class="hero-content">
+      <h1>Road to Doctor of Medicine<br>2026</h1>
+      <p>Interactive clinical cases — sharpen your diagnostic reasoning, one step at a time.</p>
+      <div id="grad-countdown-container">
+        <div class="count-item">
+          <div class="count-number" id="days">00</div>
+          <div class="count-label">Days</div>
+        </div>
+        <div class="count-item">
+          <div class="count-number" id="hours">00</div>
+          <div class="count-label">Hours</div>
+        </div>
+        <div class="count-item">
+          <div class="count-number" id="minutes">00</div>
+          <div class="count-label">Minutes</div>
+        </div>
+        <div class="count-item">
+          <div class="count-number" id="seconds">00</div>
+          <div class="count-label">Seconds</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <!-- CLINICAL CASES SLIDER -->
+    <div class="slider-section">
+      <h2>Clinical Cases</h2>
+      <div class="slider-container">
+        <button class="slider-arrow prev" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
+        <button class="slider-arrow next" id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+        <div class="slider-track" id="sliderTrack">
+
+          <!-- CASE 1 -->
+          <div class="slider-card" data-case="1">
+            <h3 class="case-title">Case 1: Acute Chest Pain</h3>
+            <div class="case-presentation">
+              A 55-year-old man presents with sudden-onset central chest pain radiating to the left arm, associated with sweating and shortness of breath. ECG shows ST-segment elevation in leads II, III, aVF.
+            </div>
+            <button class="reveal-btn history-btn" onclick="toggleSection(this)">📋 Reveal History</button>
+            <div class="hidden-section history-section">
+              <div class="history-box">
+                <strong>History:</strong> Patient is a chronic smoker, known hypertensive, and has a strong family history of ischemic heart disease. Pain started 2 hours ago at rest, described as "heavy pressure" 8/10.
+              </div>
+              <button class="reveal-btn investigations-btn" onclick="toggleSection(this)">🔬 Reveal Investigations</button>
+              <div class="hidden-section investigations-section">
+                <div class="investigations-box">
+                  <strong>Investigations:</strong> Troponin I elevated (12 ng/mL), CK-MB elevated. Chest X-ray shows mild pulmonary congestion. Echocardiogram reveals inferior wall hypokinesis.
+                </div>
+                <button class="reveal-btn diagnosis-btn" onclick="toggleSection(this)">🩺 Reveal Diagnosis</button>
+                <div class="hidden-section diagnosis-section">
+                  <div class="diagnosis-box">
+                    <strong>Diagnosis:</strong> Acute inferior ST-elevation myocardial infarction (STEMI). Urgent reperfusion required.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="capture-btn" onclick="captureCard(this)">📸 Save Card as Image</button>
+          </div>
+
+          <!-- CASE 2 -->
+          <div class="slider-card" data-case="2">
+            <h3 class="case-title">Case 2: Progressive Dyspnea</h3>
+            <div class="case-presentation">
+              A 68-year-old woman presents with worsening shortness of breath over 3 months, orthopnea, and bilateral leg swelling. She has a history of hypertension and type 2 diabetes. JVP is elevated, and crackles are heard at lung bases.
+            </div>
+            <button class="reveal-btn history-btn" onclick="toggleSection(this)">📋 Reveal History</button>
+            <div class="hidden-section history-section">
+              <div class="history-box">
+                <strong>History:</strong> She reports reduced exercise tolerance, waking up at night gasping for air. No chest pain. She is on lisinopril and metformin. No prior cardiac workup.
+              </div>
+              <button class="reveal-btn investigations-btn" onclick="toggleSection(this)">🔬 Reveal Investigations</button>
+              <div class="hidden-section investigations-section">
+                <div class="investigations-box">
+                  <strong>Investigations:</strong> BNP markedly elevated (1200 pg/mL). Chest X-ray shows cardiomegaly and pulmonary vascular congestion. Echocardiogram: LVEF 35%, global hypokinesis, moderate mitral regurgitation.
+                </div>
+                <button class="reveal-btn diagnosis-btn" onclick="toggleSection(this)">🩺 Reveal Diagnosis</button>
+                <div class="hidden-section diagnosis-section">
+                  <div class="diagnosis-box">
+                    <strong>Diagnosis:</strong> Congestive heart failure with reduced ejection fraction (HFrEF), likely ischemic cardiomyopathy given risk factors. Start diuretics, ACEi, beta-blockers.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="capture-btn" onclick="captureCard(this)">📸 Save Card as Image</button>
+          </div>
+
+          <!-- CASE 3 -->
+          <div class="slider-card" data-case="3">
+            <h3 class="case-title">Case 3: Fever and Headache</h3>
+            <div class="case-presentation">
+              A 22-year-old college student presents with high fever (39.5°C), severe headache, photophobia, and neck stiffness for 2 days. No rash. He is drowsy but arousable.
+            </div>
+            <button class="reveal-btn history-btn" onclick="toggleSection(this)">📋 Reveal History</button>
+            <div class="hidden-section history-section">
+              <div class="history-box">
+                <strong>History:</strong> No recent travel. Lives in a dormitory. A classmate had similar symptoms a week ago. No known sick contacts, no meningococcal vaccination.
+              </div>
+              <button class="reveal-btn investigations-btn" onclick="toggleSection(this)">🔬 Reveal Investigations</button>
+              <div class="hidden-section investigations-section">
+                <div class="investigations-box">
+                  <strong>Investigations:</strong> CSF analysis: cloudy, elevated WBCs (2000/µL, 90% neutrophils), low glucose (20 mg/dL), elevated protein. Gram stain shows Gram-negative diplococci.
+                </div>
+                <button class="reveal-btn diagnosis-btn" onclick="toggleSection(this)">🩺 Reveal Diagnosis</button>
+                <div class="hidden-section diagnosis-section">
+                  <div class="diagnosis-box">
+                    <strong>Diagnosis:</strong> Bacterial meningitis, most likely Neisseria meningitidis. Start empiric ceftriaxone and dexamethasone. Droplet precautions.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="capture-btn" onclick="captureCard(this)">📸 Save Card as Image</button>
+          </div>
+        </div>
+      </div>
+      <div class="slider-dots" id="sliderDots">
+        <button class="slider-dot active" data-index="0"></button>
+        <button class="slider-dot" data-index="1"></button>
+        <button class="slider-dot" data-index="2"></button>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="about-section">
+      <h2>About This Journey</h2>
+      <p style="margin-top:1.5rem; font-size:1.1rem; color:#2c5b7a;">
+        This platform, curated by Dr. Yasmeen, documents the road to earning a Doctor of Medicine degree — a commitment to excellence, resilience, and service. Interactive cases help bridge the gap between textbook knowledge and real-world clinical reasoning.
+      </p>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 Dr. Yasmeen. Built with passion and purpose.</p>
+  </footer>
+
+  <!-- COUNTDOWN SCRIPT -->
+  <script>
+    (function() {
+      const targetDate = new Date("June 15, 2026 00:00:00").getTime();
+      function updateCountdown() {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+        if (distance < 0) {
+          document.getElementById("days").textContent = "00";
+          document.getElementById("hours").textContent = "00";
+          document.getElementById("minutes").textContent = "00";
+          document.getElementById("seconds").textContent = "00";
+          return;
+        }
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        document.getElementById("days").textContent = String(days).padStart(2, '0');
+        document.getElementById("hours").textContent = String(hours).padStart(2, '0');
+        document.getElementById("minutes").textContent = String(minutes).padStart(2, '0');
+        document.getElementById("seconds").textContent = String(seconds).padStart(2, '0');
+      }
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    })();
+  </script>
+
+  <!-- SLIDER NAVIGATION SCRIPT -->
+  <script>
+    (function() {
+      const track = document.getElementById('sliderTrack');
+      const slides = Array.from(track.children);
+      const nextBtn = document.getElementById('nextBtn');
+      const prevBtn = document.getElementById('prevBtn');
+      const dots = Array.from(document.querySelectorAll('.slider-dot'));
+      let currentIndex = 0;
+
+      function updateSlider(index) {
+        track.style.transform = `translateX(-${index * 100}%)`;
+        dots.forEach(dot => dot.classList.remove('active'));
+        dots[index].classList.add('active');
+        currentIndex = index;
+      }
+
+      nextBtn.addEventListener('click', () => {
+        const newIndex = (currentIndex + 1) % slides.length;
+        updateSlider(newIndex);
+      });
+
+      prevBtn.addEventListener('click', () => {
+        const newIndex = (currentIndex - 1 + slides.length) % slides.length;
+        updateSlider(newIndex);
+      });
+
+      dots.forEach(dot => {
+        dot.addEventListener('click', (e) => {
+          const index = parseInt(e.target.getAttribute('data-index'));
+          updateSlider(index);
+        });
+      });
+
+      let touchStartX = 0;
+      track.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+      track.addEventListener('touchend', e => {
+        const touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) { diff > 0 ? nextBtn.click() : prevBtn.click(); }
+      });
+    })();
+  </script>
+
+  <!-- TOGGLE REVEAL SCRIPT -->
+  <script>
+    function toggleSection(btn) {
+      const section = btn.nextElementSibling;
+      if (section && section.classList.contains('hidden-section')) {
+        section.classList.toggle('visible');
+      }
+    }
+  </script>
+
+  <!-- CAPTURE CARD AS IMAGE -->
+  <script>
+    function captureCard(btn) {
+      const card = btn.closest('.slider-card');
+      if (!card) return;
+      html2canvas(card, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        logging: false
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `clinical-case-${card.dataset.case || 'card'}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }).catch(error => {
+        console.error('Capture failed:', error);
+        alert('Could not capture the card. Please try again.');
+      });
+    }
+  </script>
+</body>
+</html>
