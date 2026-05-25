@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blurt Hub Pro – Polished Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
+    </script>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-sidebar: #0b0f19;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --border: #334155;
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            --color-danger: #ef4444;
+            --radius: 10px;
+            --shadow: 0 4px 12px rgba(0,0,0,0.15);
+            --transition-fast: 0.15s ease;
+            --transition: 0.25s ease;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; display: flex; height: 100vh; background: var(--bg-main); color: var(--text-main); overflow: hidden; line-height: 1.5; }
+
+        /* ── SIDEBAR ── */
+        .sidebar { width: 280px; min-width: 280px; background: var(--bg-sidebar); border-right: 1px solid var(--border); padding: 20px 14px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; overflow-x: hidden; }
+        .sidebar h2 { font-size: 1.2rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; padding: 0 4px; }
+        .sidebar button.create-btn { background: var(--accent); color: white; border: none; padding: 11px 14px; border-radius: var(--radius); cursor: pointer; font-weight: 600; font-size: 0.88rem; box-shadow: var(--shadow); transition: background var(--transition-fast), transform var(--transition-fast); }
+        .sidebar button.create-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .sidebar button.create-btn:active { transform: translateY(0); }
+
+        .topic-list { flex: 1; overflow-y: auto; margin-top: 4px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+        .topic-list::-webkit-scrollbar { width: 5px; }
+        .topic-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .saved-sessions { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 8px; }
+        .saved-sessions h4 { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 4px; }
+        .saved-session-item { padding: 7px 10px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.83rem; color: var(--text-muted); transition: background var(--transition-fast); }
+        .saved-session-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .saved-session-item .progress-badge { background: var(--accent); color: white; border-radius: 12px; padding: 2px 8px; font-size: 0.72rem; font-weight: 600; }
+
+        .category-group { margin-bottom: 6px; background: rgba(255,255,255,0.015); border-radius: var(--radius); padding: 3px; }
+        .category-header { padding: 9px 10px; border-radius: var(--radius); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.88rem; color: var(--text-muted); user-select: none; transition: color var(--transition-fast), background var(--transition-fast); }
+        .category-header:hover { color: #fff; background: rgba(255,255,255,0.04); }
+        .subcategory-group, .subsubcategory-group { margin-left: 10px; margin-top: 3px; background: rgba(255,255,255,0.015); border-radius: var(--radius); padding: 2px; }
+        .subcategory-header, .subsubcategory-header { padding: 7px 10px; border-radius: var(--radius); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 500; font-size: 0.83rem; color: var(--text-muted); user-select: none; transition: color var(--transition-fast), background var(--transition-fast); }
+        .subcategory-header:hover, .subsubcategory-header:hover { color: #fff; background: rgba(255,255,255,0.03); }
+        .category-items, .subcategory-items, .subsubcategory-items { list-style: none; margin-top: 1px; }
+
+        .topic-item { padding: 7px 10px; border-radius: 7px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; transition: all var(--transition-fast); margin-left: 20px; }
+        .topic-item:hover { background: rgba(255,255,255,0.05); }
+        .topic-item.active { background: var(--accent); color: white; font-weight: 600; }
+        .topic-item .delete-btn { background: transparent; color: var(--text-muted); border: none; font-size: 1.1rem; cursor: pointer; opacity: 0; padding: 0 4px; transition: opacity var(--transition-fast), color var(--transition-fast); line-height: 1; }
+        .topic-item:hover .delete-btn { opacity: 0.6; }
+        .topic-item .delete-btn:hover { opacity: 1; color: var(--color-danger); }
+        .topic-item .badge { background: rgba(255,255,255,0.18); color: white; border-radius: 10px; padding: 1px 7px; font-size: 0.7rem; margin-right: 4px; font-weight: 600; }
+
+        .blurt-level-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; font-size: 0.75rem; padding: 2px 7px; border-radius: 6px; margin-right: 6px; display: inline-flex; align-items: center; gap: 3px; transition: all var(--transition-fast); }
+        .blurt-level-btn:hover { color: #fff; border-color: var(--accent); background: rgba(99,102,241,0.12); }
+
+        .mode-switch-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text-muted); padding: 10px 12px; border-radius: var(--radius); cursor: pointer; font-weight: 600; text-align: center; transition: all var(--transition-fast); font-size: 0.85rem; }
+        .mode-switch-btn:hover { color: #fff; border-color: var(--accent); background: rgba(99,102,241,0.08); }
+
+        /* ── MAIN CONTENT ── */
+        .main { flex: 1; padding: 28px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+        .main::-webkit-scrollbar { width: 6px; }
+        .main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); }
+        .card-subtle { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+
+        .api-key-box { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .api-key-box label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; letter-spacing: 0.04em; }
+        .api-key-box input { flex: 1; min-width: 250px; background: var(--bg-main); border: 1px solid var(--border); color: white; padding: 9px 14px; border-radius: var(--radius); font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.85rem; transition: border-color var(--transition-fast); }
+        .api-key-box input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+
+        .topic-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 12px; }
+        .topic-header h3 { font-size: 1.3rem; font-weight: 700; line-height: 1.3; }
+
+        textarea { width: 100%; background: var(--bg-main); border: 1px solid var(--border); color: white; padding: 14px; border-radius: var(--radius); font-family: inherit; font-size: 0.93rem; line-height: 1.6; resize: vertical; margin-top: 6px; transition: border-color var(--transition-fast); }
+        textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+
+        .btn-primary { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: var(--radius); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: all var(--transition-fast); box-shadow: 0 2px 6px rgba(99,102,241,0.2); font-size: 0.9rem; white-space: nowrap; }
+        .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-primary:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; box-shadow: none; transform: none; }
+
+        .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 8px 15px; border-radius: var(--radius); cursor: pointer; font-weight: 500; transition: all var(--transition-fast); font-size: 0.85rem; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.05); border-color: var(--text-muted); }
+        .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .btn-icon { background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; padding: 5px 8px; border-radius: 6px; transition: all var(--transition-fast); }
+        .btn-icon:hover { color: var(--text-main); background: rgba(255,255,255,0.06); }
+        .btn-icon.active { color: var(--color-danger); animation: pulse-icon 1.2s infinite; }
+
+        @keyframes pulse-icon { 0%,100%{ opacity:1; } 50%{ opacity:0.5; } }
+
+        .file-upload-label { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+
+        .auto-save-indicator { font-size: 0.7rem; color: var(--color-success); opacity: 0; transition: opacity var(--transition); pointer-events: none; margin-left: 8px; }
+        .auto-save-indicator.visible { opacity: 1; }
+
+        .high-yield-box { background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.2); border-radius: var(--radius); padding: 15px; margin-top: 14px; }
+        .high-yield-box h4 { color: var(--color-warning); margin-bottom: 8px; font-size: 0.95rem; }
+        .high-yield-box ul { padding-left: 18px; color: #e2e8f0; }
+        .high-yield-box li { margin-bottom: 5px; font-size: 0.9rem; }
+
+        .timer-section { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+        .timer-left { display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 0.9rem; }
+        .timer-display { font-size: 2.1rem; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-weight: 700; color: var(--accent); background: var(--bg-main); padding: 5px 18px; border-radius: var(--radius); border: 1px solid var(--border); transition: color var(--transition-fast), border-color var(--transition-fast); }
+        .timer-display.warning { color: var(--color-warning); border-color: var(--color-warning); animation: pulse-border 1.5s infinite; }
+        .timer-display.danger { color: var(--color-danger); border-color: var(--color-danger); animation: pulse-border 0.8s infinite; }
+        .timer-controls { display: flex; gap: 6px; }
+
+        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 18px; }
+        .metric-card { padding: 16px; border-radius: var(--radius); border: 1px solid var(--border); text-align: center; background: var(--bg-main); box-shadow: var(--shadow); }
+        .metric-card.score { border-color: var(--accent); }
+        .metric-card.score h1 { font-size: 2.3rem; color: var(--accent); }
+        .metric-card.danger { border-color: var(--color-danger); background: rgba(239,68,68,0.02); }
+        .metric-card.danger h1 { font-size: 2.3rem; color: var(--color-danger); }
+
+        .analysis-container { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+        .gap-card { border-radius: var(--radius); padding: 15px; border-left: 4px solid var(--border); background: var(--bg-main); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .gap-card.has-gap { border-left-color: var(--color-warning); }
+        .gap-card.no-gap { border-left-color: var(--color-success); }
+        .gap-card.critical-error { border-left-color: var(--color-danger); background: rgba(239,68,68,0.02); }
+        .gap-card.high-yield-coverage { border-left-color: var(--color-warning); }
+        .gap-card.high-yield-coverage.no-gap { border-left-color: var(--color-success); }
+        .gap-card.accurate-recall { border-left-color: var(--color-success); background: rgba(16,185,129,0.03); }
+        .gap-card h4 { font-size: 0.95rem; margin-bottom: 7px; display: flex; align-items: center; gap: 7px; }
+        .has-gap h4 { color: var(--color-warning); }
+        .no-gap h4 { color: var(--color-success); }
+        .critical-error h4 { color: var(--color-danger); }
+        .high-yield-coverage h4 { color: var(--color-warning); }
+        .accurate-recall h4 { color: var(--color-success); }
+        .gap-card ul { padding-left: 18px; }
+        .gap-card li { margin-bottom: 3px; font-size: 0.9rem; color: #cbd5e1; }
+
+        .history-item { background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 10px; }
+        .history-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 7px; border-bottom: 1px solid var(--border); padding-bottom: 5px; flex-wrap: wrap; gap: 6px; }
+
+        .progress-container { background: var(--bg-main); border-radius: 6px; height: 10px; margin-bottom: 18px; overflow: hidden; }
+        .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #818cf8); transition: width 0.4s ease; border-radius: 6px; }
+        .question-card { background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-top: 14px; }
+
+        /* Interactive MCQs */
+        .mcq-card { background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+        .mcq-card h4 { font-size: 0.95rem; margin-bottom: 12px; color: #e2e8f0; }
+        .mcq-options { display: flex; flex-direction: column; gap: 8px; }
+        .mcq-option { display: block; width: 100%; text-align: left; padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 6px; color: var(--text-main); font-size: 0.9rem; cursor: pointer; transition: all var(--transition-fast); }
+        .mcq-option:hover:not(.mcq-disabled) { background: rgba(99,102,241,0.08); border-color: var(--accent); }
+        .mcq-option.mcq-selected { border-color: var(--accent); background: rgba(99,102,241,0.1); }
+        .mcq-option.mcq-correct { border-color: var(--color-success)!important; background: rgba(16,185,129,0.08)!important; color: var(--color-success); }
+        .mcq-option.mcq-incorrect { border-color: var(--color-danger)!important; background: rgba(239,68,68,0.08)!important; color: var(--color-danger); }
+        .mcq-option.mcq-disabled { opacity: 0.5; cursor: default; pointer-events: none; }
+        .mcq-feedback { margin-top: 10px; font-size: 0.85rem; font-weight: 500; }
+        .mcq-feedback.correct { color: var(--color-success); }
+        .mcq-feedback.incorrect { color: var(--color-danger); }
+
+        .lbl-grade-card { margin-top: 12px; border-radius: var(--radius); padding: 13px 15px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.2); }
+        .lbl-grade-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+        .lbl-grade-header .grade-score { font-weight: 700; font-size: 0.95rem; color: var(--accent); }
+        .lbl-grade-covered { margin-bottom: 7px; }
+        .lbl-grade-covered p, .lbl-grade-missed p { font-size: 0.73rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .lbl-grade-covered p { color: var(--color-success); }
+        .lbl-grade-missed p { color: var(--color-warning); }
+        .lbl-grade-covered ul, .lbl-grade-missed ul { padding-left: 15px; margin: 0; }
+        .lbl-grade-covered li, .lbl-grade-missed li { font-size: 0.83rem; color: #cbd5e1; margin-bottom: 2px; }
+
+        .mic-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .mic-row .btn-icon { font-size: 1.1rem; padding: 3px 7px; }
+        .mic-status { font-size: 0.75rem; color: var(--text-muted); }
+
+        @keyframes pulse-border { 0%{ border-color:rgba(245,158,11,0.3); box-shadow:0 0 0 0 rgba(245,158,11,0.2); } 50%{ border-color:rgba(245,158,11,0.8); box-shadow:0 0 10px 0 rgba(245,158,11,0.45); } 100%{ border-color:rgba(245,158,11,0.3); box-shadow:0 0 0 0 rgba(245,158,11,0); } }
+        .focus-reminder { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.3); border-radius: var(--radius); padding: 11px 15px; margin-bottom: 12px; }
+        .focus-reminder.active-crunch { animation: pulse-border 2s infinite; }
+        .focus-reminder-title { font-size: 0.78rem; font-weight: 700; color: var(--color-warning); margin-bottom: 6px; }
+        .focus-reminder ul { padding-left: 15px; margin: 0; }
+        .focus-reminder li { font-size: 0.83rem; color: #e2e8f0; margin-bottom: 2px; }
+
+        .gap-tracker-card { background: var(--bg-card); border: 1px solid rgba(239,68,68,0.25); border-radius: var(--radius); padding: 18px 22px; margin-bottom: 0; }
+        .gap-tracker-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+        .gap-tracker-header h4 { font-size: 0.95rem; font-weight: 700; color: var(--color-danger); }
+        .gap-tracker-header span { font-size: 0.78rem; color: var(--text-muted); }
+        .gap-tracker-section-label { font-size: 0.73rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-warning); margin-bottom: 7px; }
+        .gap-item { display: flex; align-items: flex-start; gap: 7px; padding: 7px 9px; background: rgba(239,68,68,0.05); border-radius: 6px; margin-bottom: 5px; border-left: 3px solid var(--color-danger); }
+        .gap-item-once { display: flex; align-items: flex-start; gap: 7px; padding: 5px 9px; border-bottom: 1px solid var(--border); font-size: 0.82rem; color: var(--text-muted); }
+        .count-badge { background: var(--color-danger); color: white; border-radius: 10px; padding: 1px 7px; font-size: 0.7rem; white-space: nowrap; margin-top: 1px; flex-shrink: 0; font-weight: 600; }
+        .count-badge-warn { background: var(--color-warning); color: #0f172a; border-radius: 10px; padding: 1px 7px; font-size: 0.7rem; white-space: nowrap; margin-top: 1px; flex-shrink: 0; font-weight: 600; }
+        .gap-item-text { font-size: 0.87rem; color: #cbd5e1; line-height: 1.4; }
+        .gap-tracker-empty { font-size: 0.87rem; color: var(--color-success); font-style: italic; }
+
+        details summary { cursor: pointer; font-size: 0.8rem; color: var(--text-muted); padding: 5px 0; user-select: none; transition: color var(--transition-fast); }
+        details summary:hover { color: var(--text-main); }
+
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); padding: 12px 18px; border-radius: var(--radius); font-size: 0.85rem; z-index: 999; opacity: 0; transform: translateY(10px); transition: all var(--transition); pointer-events: none; box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        .keyboard-hint { font-size: 0.7rem; color: var(--text-muted); opacity: 0.6; margin-top: 4px; text-align: right; }
+
+        /* ── COMPACT STATUS STRIP ── */
+        .status-strip { display: flex; gap: 5px; }
+        .status-chip { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 6px 4px 5px; display: flex; flex-direction: column; align-items: center; gap: 1px; position: relative; min-width: 0; }
+        .status-chip.exam-chip { border-color: rgba(99,102,241,0.35); background: rgba(99,102,241,0.06); }
+        .status-chip.exam-chip.urgent { border-color: rgba(239,68,68,0.45); background: rgba(239,68,68,0.06); }
+        .status-chip.exam-chip.warning { border-color: rgba(245,158,11,0.45); background: rgba(245,158,11,0.06); }
+        .status-chip.due-chip.has-due { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.05); }
+        .sc-icon { font-size: 0.7rem; line-height: 1; }
+        .sc-val { font-size: 1rem; font-weight: 800; color: var(--accent); line-height: 1.1; }
+        .exam-chip.urgent .sc-val { color: var(--color-danger); }
+        .exam-chip.warning .sc-val { color: var(--color-warning); }
+        .due-chip.has-due .sc-val { color: var(--color-warning); }
+        .sc-label { font-size: 0.57rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; text-align: center; line-height: 1.2; }
+        .sc-edit { position: absolute; top: 2px; right: 3px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.55rem; padding: 0; opacity: 0; transition: opacity 0.15s; }
+        .status-chip:hover .sc-edit { opacity: 0.8; }
+        .exam-date-input { width: 100%; background: var(--bg-main); border: 1px solid var(--border); color: white; padding: 5px 8px; border-radius: 6px; font-size: 0.8rem; margin-top: 3px; }
+
+        /* ── SRS ── */
+        .due-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--color-danger); margin-right: 5px; flex-shrink: 0; animation: pulse-dot 1.5s infinite; }
+        .due-dot.due-soon { background: var(--color-warning); animation: none; }
+        .due-dot.done { background: var(--color-success); animation: none; }
+        @keyframes pulse-dot { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.5; transform:scale(0.8); } }
+        .topic-item-inner { display: flex; align-items: center; flex: 1; min-width: 0; }
+        .topic-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .confidence-panel { margin-top: 18px; background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.25); border-radius: var(--radius); padding: 16px; }
+        .confidence-panel h4 { font-size: 0.9rem; font-weight: 700; color: #e2e8f0; margin-bottom: 4px; }
+        .confidence-panel p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
+        .confidence-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+        .confidence-btn { flex: 1; min-width: 80px; background: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); padding: 10px 6px; border-radius: var(--radius); cursor: pointer; font-size: 0.78rem; font-weight: 600; text-align: center; transition: all 0.15s ease; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .confidence-btn .cf-emoji { font-size: 1.4rem; line-height: 1; }
+        .confidence-btn:hover { border-color: var(--accent); background: rgba(99,102,241,0.1); transform: translateY(-2px); }
+        .confidence-btn.selected { border-color: var(--accent); background: rgba(99,102,241,0.18); color: #fff; }
+        .confidence-btn[data-level="1"]:hover, .confidence-btn[data-level="1"].selected { border-color: var(--color-danger); background: rgba(239,68,68,0.1); }
+        .confidence-btn[data-level="2"]:hover, .confidence-btn[data-level="2"].selected { border-color: var(--color-warning); background: rgba(245,158,11,0.1); }
+        .confidence-btn[data-level="3"]:hover, .confidence-btn[data-level="3"].selected { border-color: #60a5fa; background: rgba(96,165,250,0.1); }
+        .confidence-btn[data-level="4"]:hover, .confidence-btn[data-level="4"].selected { border-color: var(--color-success); background: rgba(16,185,129,0.08); }
+        .confidence-btn[data-level="5"]:hover, .confidence-btn[data-level="5"].selected { border-color: #a78bfa; background: rgba(167,139,250,0.1); }
+        .next-review-label { font-size: 0.78rem; color: var(--color-success); margin-top: 10px; text-align: center; display: none; font-weight: 600; }
+
+        /* ── INTERLEAVED MODE ── */
+        .interleaved-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; margin-top: 20px; }
+        .interleaved-panel h3 { font-size: 1.1rem; margin-bottom: 6px; }
+        .interleaved-panel p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; }
+        .interleaved-topic-chip { display: inline-block; background: rgba(99,102,241,0.12); border: 1px solid var(--accent); border-radius: 20px; padding: 5px 14px; font-size: 0.85rem; font-weight: 600; color: var(--accent); margin-bottom: 16px; }
+
+        /* ── DAILY STATS ── */
+        .daily-stats-row { display: flex; gap: 8px; }
+        .daily-stat-chip { flex: 1; background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; text-align: center; }
+        .daily-stat-chip .ds-val { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
+        .daily-stat-chip .ds-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; min-width: 100%; max-height: 220px; flex-shrink: 0; }
+            .main { padding: 16px; }
+            .api-key-box { flex-direction: column; align-items: stretch; }
+            .timer-display { font-size: 1.6rem; }
+            .metric-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>🩺 Blurt Hub Pro</h2>
+        <button id="newTopicBtn" class="create-btn">+ Create Medical Case</button>
+
+        <!-- MODE BUTTONS: side by side to save space -->
+        <div style="display:flex;gap:6px;">
+            <button id="littleByLittleBtn" class="mode-switch-btn" style="flex:1;font-size:0.78rem;padding:8px 6px;">🧠 Little by Little</button>
+            <button id="interleavedBtn" class="mode-switch-btn" style="flex:1;font-size:0.78rem;padding:8px 6px;border-color:rgba(167,139,250,0.4);color:#a78bfa;">🎲 Interleaved</button>
+        </div>
+
+        <!-- COMPACT STATUS STRIP -->
+        <div class="status-strip" id="statusStrip">
+            <div class="status-chip exam-chip" id="examChip" title="Click to set exam date">
+                <span class="sc-icon">📅</span>
+                <span class="sc-val" id="examCdDays">—</span>
+                <span class="sc-label">days left</span>
+                <button class="sc-edit" id="editExamDateBtn">✏️</button>
+            </div>
+            <div class="status-chip due-chip" id="dueChip">
+                <span class="sc-icon" id="dueIcon">📋</span>
+                <span class="sc-val" id="todayPlanCount">0</span>
+                <span class="sc-label" id="todayPlanSub">due</span>
+            </div>
+            <div class="status-chip blurt-chip" id="blurtChip" style="display:none;">
+                <span class="sc-icon">✍️</span>
+                <span class="sc-val" id="blurtsToday">0</span>
+                <span class="sc-label">today</span>
+            </div>
+        </div>
+        <input type="date" class="exam-date-input" id="examDateInput" style="display:none;" />
+
+        <div id="topicList" class="topic-list"></div>
+        <div id="savedSessions" class="saved-sessions" style="display: none;">
+            <h4>📌 Saved Sessions</h4>
+            <div id="savedSessionsList"></div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="card-subtle api-key-box">
+            <label>🔑 DeepSeek API Key</label>
+            <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off" />
+            <span class="auto-save-indicator" id="apiSaveIndicator">Saved ✓</span>
+        </div>
+
+        <div id="topicContent" style="display: none;">
+            <div class="card topic-header">
+                <h3 id="topicNameDisplay"></h3>
+                <div id="refEditor">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                        <label style="font-weight: 600; color: var(--text-muted);">📘 Reference Material</label>
+                        <input type="file" id="fileUploadInput" accept=".txt,.pdf" style="display: none;" />
+                        <button class="btn-icon file-upload-label" title="Load from file (.txt, .pdf)" onclick="document.getElementById('fileUploadInput').click()">📂</button>
+                    </div>
+                    <textarea id="referenceText" rows="6" placeholder="Paste your master diagnostic keys, guidelines, or textbook text..."></textarea>
+                    <button id="saveReferenceBtn" class="btn-primary">💾 Save Case & Extract High-Yield</button>
+                </div>
+                <div id="refDisplay" style="display:none;">
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+                        <span style="color: var(--color-success); font-weight: 600;">✅ Reference Active</span>
+                        <button class="btn-secondary" id="editReferenceBtn">Edit</button>
+                        <button class="btn-secondary" id="refreshHighYieldBtn" style="border-color: var(--color-warning); color: var(--color-warning);">🔄 Re‑extract Highlights</button>
+                    </div>
+                    <div id="highYieldContainer"></div>
+                </div>
+            </div>
+
+            <div id="gapTrackerArea"></div>
+
+            <div class="card timer-section">
+                <div class="timer-left">
+                    <span>⏱️ Timer</span>
+                    <input type="number" id="timerMinutes" value="5" min="1" max="60" style="width:50px; background: var(--bg-main); border:1px solid var(--border); color:white; padding:5px 8px; border-radius:6px; text-align:center; font-size:0.9rem;">
+                    <span>min</span>
+                </div>
+                <span class="timer-display" id="timerDisplay">05:00</span>
+                <div class="timer-controls">
+                    <button id="startTimerBtn" class="btn-secondary" style="border-color: var(--color-success); color: var(--color-success);">Start</button>
+                    <button id="pauseTimerBtn" class="btn-secondary" disabled>Pause</button>
+                    <button id="resetTimerBtn" class="btn-secondary">Reset</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                    <label style="font-weight: 600; color: var(--text-muted);">✍️ Blurt</label>
+                    <button class="btn-icon" id="micBtn" title="Start voice transcription">🎤</button>
+                    <span id="micStatus" style="font-size:0.78rem; color:var(--text-muted);"></span>
+                </div>
+                <div id="focusReminder" class="focus-reminder" style="display:none;"></div>
+                <textarea id="blurtInput" rows="7" placeholder="Close your references. Dump everything you recall..."></textarea>
+                <div class="keyboard-hint">Ctrl+Enter to submit</div>
+                <button class="btn-primary" id="checkGapsBtn" style="width: 100%; justify-content: center;">🔍 Execute Strict Audit</button>
+            </div>
+
+            <div id="resultArea"></div>
+        </div>
+
+        <div id="littleByLittle" style="display: none;">
+            <div class="card">
+                <h3>📖 Little by Little Active Recall</h3>
+                <p style="color:var(--text-muted); font-size:0.87rem;">Paste your reference text, and the AI will break it into questions. Work through each one to reinforce your memory.</p>
+                <button id="loadCurrentRefBtn" class="btn-secondary" style="margin-top:8px;">📋 Load Current Reference</button>
+                <textarea id="lblReference" rows="8" placeholder="Paste your full lecture text, textbook chapter, or clinical guideline here..."></textarea>
+                <button id="startLittleByLittleBtn" class="btn-primary" style="width:100%;">🚀 Start Session</button>
+                <div id="lblResetContainer" style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;"></div>
+            </div>
+
+            <div id="lblSessionArea" style="display: none;">
+                <div class="progress-container">
+                    <div class="progress-bar" id="lblProgressBar"></div>
+                </div>
+                <div id="lblQuestionContainer"></div>
+                <div id="lblExtraArea" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <div id="noTopic" style="text-align:center; color: var(--text-muted); margin-top:80px; font-size:1.05rem;">
+            Select or create a topic from the sidebar to start.
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        (function() {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+            // ── State ──
+            let topics = [];
+            let currentTopicId = null;
+            let timerInterval = null;
+            let timerSeconds = 300;
+            let timerRunning = false;
+            let collapsedCategories = {};
+            let collapsedSubcategories = {};
+            let collapsedSubsubcategories = {};
+            let recognition = null;
+            let speechTarget = null;
+            let isRecognizing = false;
+            let lblQuestions = [];
+            let lblCurrentIndex = 0;
+            let lblReferenceText = '';
+            let toastTimer = null;
+
+            function loadState(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch(e) { return fallback; } }
+            topics = loadState('blurt_topics', []);
+            collapsedCategories = loadState('collapsed_cats', {});
+            collapsedSubcategories = loadState('collapsed_subcats', {});
+            collapsedSubsubcategories = loadState('collapsed_subsubcats', {});
+
+            const $ = (sel) => document.querySelector(sel);
+            const $$ = (sel) => document.querySelectorAll(sel);
+
+            const apiKeyInput = $('#apiKeyInput');
+            const topicListEl = $('#topicList');
+            const newTopicBtn = $('#newTopicBtn');
+            const topicContent = $('#topicContent');
+            const noTopic = $('#noTopic');
+            const topicNameDisplay = $('#topicNameDisplay');
+            const refEditor = $('#refEditor');
+            const refDisplay = $('#refDisplay');
+            const referenceTextEl = $('#referenceText');
+            const saveReferenceBtn = $('#saveReferenceBtn');
+            const editReferenceBtn = $('#editReferenceBtn');
+            const refreshHighYieldBtn = $('#refreshHighYieldBtn');
+            const highYieldContainer = $('#highYieldContainer');
+            const timerMinutesInput = $('#timerMinutes');
+            const timerDisplay = $('#timerDisplay');
+            const startTimerBtn = $('#startTimerBtn');
+            const pauseTimerBtn = $('#pauseTimerBtn');
+            const resetTimerBtn = $('#resetTimerBtn');
+            const blurtInput = $('#blurtInput');
+            const checkGapsBtn = $('#checkGapsBtn');
+            const resultArea = $('#resultArea');
+            const micBtn = $('#micBtn');
+            const micStatus = $('#micStatus');
+            const fileUploadInput = $('#fileUploadInput');
+            const littleByLittleBtn = $('#littleByLittleBtn');
+            const littleByLittleDiv = $('#littleByLittle');
+            const lblReference = $('#lblReference');
+            const loadCurrentRefBtn = $('#loadCurrentRefBtn');
+            const startLittleByLittleBtn = $('#startLittleByLittleBtn');
+            const lblSessionArea = $('#lblSessionArea');
+            const lblProgressBar = $('#lblProgressBar');
+            const lblQuestionContainer = $('#lblQuestionContainer');
+            const lblExtraArea = $('#lblExtraArea');
+            const savedSessionsDiv = $('#savedSessions');
+            const savedSessionsList = $('#savedSessionsList');
+            const toastEl = $('#toast');
+            const apiSaveIndicator = $('#apiSaveIndicator');
+
+            function showToast(msg, duration=2200) { if(toastTimer) clearTimeout(toastTimer); toastEl.textContent = msg; toastEl.classList.add('show'); toastTimer = setTimeout(() => toastEl.classList.remove('show'), duration); }
+
+            const storedApiKey = localStorage.getItem('deepseek_api_key');
+            if (storedApiKey) apiKeyInput.value = storedApiKey;
+            let apiKeyDebounce;
+            apiKeyInput.addEventListener('input', () => { clearTimeout(apiKeyDebounce); apiKeyDebounce = setTimeout(() => { localStorage.setItem('deepseek_api_key', apiKeyInput.value.trim()); apiSaveIndicator.classList.add('visible'); setTimeout(() => apiSaveIndicator.classList.remove('visible'), 1800); }, 500); });
+
+            function saveTopics() { try { localStorage.setItem('blurt_topics', JSON.stringify(topics)); } catch(e) { showToast('⚠️ Storage full — clear old cases'); } }
+            function saveCollapsedCats() { try { localStorage.setItem('collapsed_cats', JSON.stringify(collapsedCategories)); } catch(e) {} }
+            function saveCollapsedSubcats() { try { localStorage.setItem('collapsed_subcats', JSON.stringify(collapsedSubcategories)); } catch(e) {} }
+            function saveCollapsedSubsubcats() { try { localStorage.setItem('collapsed_subsubcats', JSON.stringify(collapsedSubsubcategories)); } catch(e) {} }
+            function getTopic(id) { return topics.find(t => t.id === id); }
+
+            fileUploadInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0]; if(!file) return;
+                try {
+                    let text = '';
+                    if(file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                        let fullText = '';
+                        for(let i=1; i<=pdf.numPages; i++) { const page = await pdf.getPage(i); const content = await page.getTextContent(); fullText += content.items.map(item => item.str).join(' ') + '\n'; }
+                        text = fullText.trim();
+                    } else { text = await file.text(); }
+                    referenceTextEl.value = text;
+                    showToast('📄 File loaded successfully');
+                } catch(err) { showToast('❌ Failed to read file: ' + err.message); }
+                finally { fileUploadInput.value = ''; }
+            });
+
+            // ── Speech recognition ──
+            function initSpeechRecognition() {
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if(!SR) {
+                    micBtn.disabled = true;
+                    micBtn.title = 'Speech recognition not supported';
+                    return;
+                }
+                recognition = new SR();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = 'en-US';
+                recognition.onstart = () => {
+                    isRecognizing = true;
+                    const activeMic = document.querySelector('.btn-icon.active-mic');
+                    if(activeMic) activeMic.classList.add('active');
+                    if(speechTarget === blurtInput) {
+                        micStatus.textContent = '🔴 Listening...';
+                    } else {
+                        const lblStatus = document.getElementById('lblMicStatus');
+                        if(lblStatus) lblStatus.textContent = '🔴 Listening...';
+                    }
+                };
+                recognition.onend = () => {
+                    isRecognizing = false;
+                    const activeMic = document.querySelector('.btn-icon.active-mic');
+                    if(activeMic) activeMic.classList.remove('active');
+                    if(speechTarget === blurtInput) {
+                        micStatus.textContent = '';
+                    } else {
+                        const lblStatus = document.getElementById('lblMicStatus');
+                        if(lblStatus) lblStatus.textContent = '';
+                    }
+                    speechTarget = null;
+                };
+                recognition.onerror = (ev) => {
+                    isRecognizing = false;
+                    const activeMic = document.querySelector('.btn-icon.active-mic');
+                    if(activeMic) activeMic.classList.remove('active');
+                    if(speechTarget === blurtInput) {
+                        micStatus.textContent = '⚠️ ' + ev.error;
+                    } else {
+                        const lblStatus = document.getElementById('lblMicStatus');
+                        if(lblStatus) lblStatus.textContent = '⚠️ ' + ev.error;
+                    }
+                    if(ev.error === 'not-allowed') showToast('🎤 Microphone access denied');
+                    speechTarget = null;
+                };
+                recognition.onresult = (ev) => {
+                    let finalTranscript = '';
+                    for(let i=ev.resultIndex; i<ev.results.length; i++) {
+                        if(ev.results[i].isFinal) finalTranscript += ev.results[i][0].transcript;
+                    }
+                    if(finalTranscript && speechTarget) {
+                        const cur = speechTarget.value;
+                        speechTarget.value = cur + (cur && !cur.endsWith(' ') ? ' ' : '') + finalTranscript + ' ';
+                        speechTarget.scrollTop = speechTarget.scrollHeight;
+                    }
+                };
+            }
+
+            function startSpeechFor(target) {
+                if(!recognition) {
+                    initSpeechRecognition();
+                    if(!recognition) return;
+                }
+                if(isRecognizing) {
+                    recognition.stop();
+                    return;
+                }
+                speechTarget = target;
+                if(target === blurtInput) {
+                    micBtn.classList.add('active-mic');
+                } else {
+                    const lblMicBtn = document.getElementById('lblMicBtn');
+                    if(lblMicBtn) lblMicBtn.classList.add('active-mic');
+                }
+                recognition.start();
+            }
+
+            micBtn.addEventListener('click', () => { startSpeechFor(blurtInput); });
+
+            blurtInput.addEventListener('keydown', (e) => {
+                if(e.ctrlKey && e.key === 'Enter') {
+                    e.preventDefault();
+                    checkGapsBtn.click();
+                }
+            });
+
+            // ── Robust MCQ parser ──
+            function parseMCQText(raw) {
+                const questions = [];
+                const lines = raw.split('\n');
+                let currentQ = null;
+                let currentOptions = {};
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line) continue;
+                    // Remove possible leading/trailing bold markers
+                    line = line.replace(/^\*\*|\*\*$/g, '');
+                    
+                    // Match question: Q1, Q1:, Q1., Q1-, etc.
+                    let qMatch = line.match(/^Q(\d+)[\s:.\-–—]+\s*(.*)/i);
+                    if (qMatch) {
+                        if (currentQ) { currentQ.options = currentOptions; questions.push(currentQ); }
+                        currentQ = { question: qMatch[2].trim(), options: {}, correct: null };
+                        currentOptions = {};
+                        continue;
+                    }
+                    // Correct answer
+                    const corrMatch = line.match(/correct\s*answer\s*:\s*([A-D])/i);
+                    if (corrMatch && currentQ) {
+                        currentQ.correct = corrMatch[1].toUpperCase();
+                        continue;
+                    }
+                    // Options: A) text, A. text, A: text
+                    const optMatch = line.match(/^([A-D])\s*[\).:]\s*(.*)/);
+                    if (optMatch && currentQ) {
+                        currentOptions[optMatch[1].toUpperCase()] = optMatch[2].trim();
+                    }
+                }
+                if (currentQ) { currentQ.options = currentOptions; questions.push(currentQ); }
+                return questions;
+            }
+
+            function renderInteractiveMCQ(parsedQuestions) {
+                if(!parsedQuestions || parsedQuestions.length === 0) return '<p style="color:var(--text-muted);">No questions to display.</p>';
+                let html = '';
+                parsedQuestions.forEach((q, idx) => {
+                    html += `<div class="mcq-card" data-mcq-index="${idx}">
+                        <h4>${idx+1}. ${q.question}</h4>
+                        <div class="mcq-options">`;
+                    for(const letter of ['A','B','C','D']) {
+                        if(q.options[letter]) {
+                            html += `<button class="mcq-option" data-question-id="${idx}" data-option="${letter}" data-correct="${q.correct}">${letter}. ${q.options[letter]}</button>`;
+                        }
+                    }
+                    html += `</div><div class="mcq-feedback" id="mcq-feedback-${idx}"></div></div>`;
+                });
+                return html;
+            }
+
+            function handleMCQClick(e) {
+                const btn = e.target.closest('.mcq-option');
+                if(!btn || btn.classList.contains('mcq-disabled')) return;
+                const card = btn.closest('.mcq-card');
+                const questionId = btn.dataset.questionId;
+                const chosen = btn.dataset.option;
+                const correct = btn.dataset.correct;
+                const feedbackEl = document.getElementById(`mcq-feedback-${questionId}`);
+                const allBtns = card.querySelectorAll('.mcq-option');
+                allBtns.forEach(b => b.classList.add('mcq-disabled'));
+                if(chosen === correct) {
+                    btn.classList.add('mcq-correct');
+                    if(feedbackEl) { feedbackEl.textContent = '✅ Correct!'; feedbackEl.className = 'mcq-feedback correct'; }
+                } else {
+                    btn.classList.add('mcq-incorrect');
+                    allBtns.forEach(b => { if(b.dataset.option === correct) b.classList.add('mcq-correct'); });
+                    if(feedbackEl) { feedbackEl.textContent = `❌ Incorrect. The correct answer is ${correct}.`; feedbackEl.className = 'mcq-feedback incorrect'; }
+                }
+            }
+
+            document.addEventListener('click', handleMCQClick);
+
+            // ── Gap tracker ──
+            function updateGapTracker(topic, parsedData) {
+                if(!topic.gapTracker) topic.gapTracker = {};
+                const allMissed = [
+                    ...(Array.isArray(parsedData.critical_errors) ? parsedData.critical_errors : []),
+                    ...(Array.isArray(parsedData.clinical_gaps) ? parsedData.clinical_gaps : []),
+                    ...(Array.isArray(parsedData.high_yield_missed) ? parsedData.high_yield_missed : [])
+                ].filter(item => item && item.trim().length > 4 && !item.toLowerCase().includes('none'));
+                allMissed.forEach(item => {
+                    const key = item.toLowerCase().trim().slice(0,100);
+                    if(topic.gapTracker[key]) { topic.gapTracker[key].count++; topic.gapTracker[key].lastSeen = Date.now(); topic.gapTracker[key].text = item; }
+                    else { topic.gapTracker[key] = { text: item, count:1, lastSeen: Date.now() }; }
+                });
+            }
+
+            window.drillPersistentGaps = async function(topicId, triggerBtn) {
+                const topic = getTopic(topicId);
+                if(!topic || !topic.gapTracker) return;
+                const gaps = Object.values(topic.gapTracker).filter(g => g.count >= 2).map(g => g.text);
+                if(gaps.length === 0) return;
+                const btn = triggerBtn || document.activeElement;
+                if(btn && btn.disabled !== undefined) { btn.disabled = true; btn.textContent = '⏳ Generating Targeted OSCE Drill...'; }
+                const apiKey = apiKeyInput.value.trim();
+                if(!apiKey) { showToast('API key missing'); if(btn && btn.disabled !== undefined) { btn.disabled = false; btn.textContent = '🎯 Generate Rapid Drill'; } return; }
+                const prompt = `The medical student is 7 days away from their final OSCE vivas and Step 2 CK written exams. They have repeatedly failed to recall these specific clinical concepts:\n\n${gaps.join('\n')}\n\nGenerate a rapid-fire, highly difficult 5-question multiple choice quiz focusing strictly on penalizing these exact weaknesses. Ensure distractors are plausible board-style traps.\nFormat exactly as:\nQ1: ...\nA) ...\nB) ...\nC) ...\nD) ...\nCorrect Answer: [letter]`;
+                try {
+                    const response = await fetch('https://api.deepseek.com/v1/chat/completions', { method:'POST', headers:{ 'Authorization':`Bearer ${apiKey}`, 'Content-Type':'application/json' }, body: JSON.stringify({ model:'deepseek-chat', messages:[{ role:'system', content:'You are a ruthless Medical Board Examiner administering remedial drills to fix persistent knowledge gaps.' }, { role:'user', content:prompt }], temperature:0.2 }) });
+                    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const data = await response.json(); if(data.error) throw new Error(data.error.message);
+                    const rawMCQ = data.choices[0].message.content;
+                    const parsed = parseMCQText(rawMCQ);
+                    let drillDiv = document.getElementById('gapDrillResult');
+                    if(!drillDiv) { drillDiv = document.createElement('div'); drillDiv.id = 'gapDrillResult'; drillDiv.style.marginTop = '14px'; const trackerArea = document.getElementById('gapTrackerArea'); if(trackerArea) trackerArea.appendChild(drillDiv); }
+                    drillDiv.innerHTML = `<h4 style="color:var(--color-danger); margin-bottom:10px;">🚨 Pre-Exam Remedial Drill</h4>` + (parsed.length ? renderInteractiveMCQ(parsed) : `<div style="background:var(--bg-main); padding:16px; border:1px solid var(--border); border-radius:6px;"><p style="color:var(--color-warning); margin-bottom:10px;">⚠️ Could not parse interactive quiz — displaying raw AI output:</p><pre style="white-space:pre-wrap; font-family:inherit; font-size:0.93rem; color:var(--text-main);">${rawMCQ}</pre></div>`);
+                    showToast('✅ Drill ready — tackle your weak spots');
+                } catch(err) { showToast('❌ Drill generation failed: ' + err.message); }
+                finally { if(btn && btn.disabled !== undefined) { btn.disabled = false; btn.textContent = '🎯 Generate Rapid Drill for Recurring Gaps'; } }
+            };
+
+            function renderGapTrackerCard(topic) {
+                if(!topic || !topic.gapTracker) return '';
+                const gaps = Object.values(topic.gapTracker).sort((a,b) => b.count - a.count);
+                if(gaps.length === 0) return '';
+                const recurring = gaps.filter(g => g.count >= 2);
+                const singles = gaps.filter(g => g.count === 1);
+                let html = `<div class="gap-tracker-card"><div class="gap-tracker-header"><h4>🔁 Persistent Gap Tracker</h4><span>${gaps.length} gaps tracked</span></div>`;
+                if(recurring.length > 0) {
+                    html += `<div style="margin-bottom:12px;"><p class="gap-tracker-section-label">⚠️ Repeatedly Missed (${recurring.length})</p>`;
+                    recurring.forEach(g => { const badgeClass = g.count >= 3 ? 'count-badge' : 'count-badge-warn'; html += `<div class="gap-item"><span class="${badgeClass}">${g.count}×</span><span class="gap-item-text">${g.text.replace(/\*\*/g,'')}</span></div>`; });
+                    html += `</div><button class="btn-primary" onclick="drillPersistentGaps(${topic.id}, this)" style="width:100%; margin-top:4px; background:var(--color-danger);">🎯 Generate Rapid Drill</button>`;
+                } else { html += `<p class="gap-tracker-empty" style="margin-bottom:10px;">✅ No recurring misses yet.</p>`; }
+                if(singles.length > 0) { html += `<details style="margin-top:10px;"><summary>▶ Missed once (${singles.length}) — expand to review</summary><div style="margin-top:7px;">`; singles.slice(0,15).forEach(g => { html += `<div class="gap-item-once"><span style="flex-shrink:0; color:var(--text-muted); font-size:0.72rem;">1×</span><span>${g.text.replace(/\*\*/g,'')}</span></div>`; }); if(singles.length>15) html += `<div style="padding:5px 9px; font-size:0.78rem; color:var(--text-muted);">... and ${singles.length-15} more.</div>`; html += `</div></details>`; }
+                html += `</div>`; return html;
+            }
+
+            function renderFocusReminder(topic) {
+                const box = $('#focusReminder'); if(!box) return;
+                if(!topic || !topic.gapTracker) { box.style.display='none'; box.classList.remove('active-crunch'); return; }
+                const recurring = Object.values(topic.gapTracker).filter(g => g.count >= 2).sort((a,b) => b.count - a.count).slice(0,6);
+                if(recurring.length===0) { box.style.display='none'; box.classList.remove('active-crunch'); return; }
+                box.style.display='block'; box.classList.add('active-crunch');
+                box.innerHTML = `<p class="focus-reminder-title">🚨 PRE-BLURT FOCUS: You've missed these ${recurring.length>1 ? recurring.length+' concepts' : 'concept'} repeatedly.</p><ul>${recurring.map(g => `<li>${g.text.replace(/\*\*/g,'')}</li>`).join('')}</ul>`;
+            }
+
+            async function gradeLBLAnswer(question, modelAnswer, userAnswer) {
+                const apiKey = apiKeyInput.value.trim(); if(!apiKey) throw new Error('API key missing.');
+                const response = await fetch('https://api.deepseek.com/v1/chat/completions', { method:'POST', headers:{ 'Authorization':`Bearer ${apiKey}`, 'Content-Type':'application/json' }, body: JSON.stringify({ model:'deepseek-chat', max_tokens:500, messages:[{ role:'system', content:`You are grading a medical student's recall answer against a model answer.\nOutput ONLY this exact format:\nSCORE: [0-100%]\nCOVERED:\n- [each concept the student correctly included; if none write "None"]\nMISSED:\n- [each key concept from the model answer absent from the student answer; if none write "None"]\nBe concise. Never use **.` }, { role:'user', content:`QUESTION: ${question}\nMODEL ANSWER: ${modelAnswer}\nSTUDENT ANSWER: ${userAnswer}` }], temperature:0.1 }) });
+                if(!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json(); if(data.error) throw new Error(data.error.message);
+                return data.choices[0].message.content;
+            }
+
+            function parseLBLGrade(raw) { const result = { covered:[], missed:[], score:'N/A' }; if(!raw) return result; const lines = raw.split('\n'); let section = null; for(let line of lines) { line = line.trim(); if(!line) continue; if(/^score:/i.test(line)) { result.score = line.replace(/^score:\s*/i,'').trim(); continue; } if(/^covered:/i.test(line)) { section='covered'; continue; } if(/^missed:/i.test(line)) { section='missed'; continue; } if(/^[-•*]\s/.test(line) && section) { const clean = line.replace(/^[-•*]\s*/,'').trim(); if(clean && !clean.toLowerCase().includes('none')) result[section].push(clean); } } return result; }
+
+            function renderLBLGrade(grade) { const coveredCount = grade.covered.length; const missedCount = grade.missed.length; let html = `<div class="lbl-grade-card"><div class="lbl-grade-header"><span class="grade-score">📊 Your Recall: ${grade.score}</span></div>`; if(coveredCount>0) html += `<div class="lbl-grade-covered"><p>✅ Covered (${coveredCount})</p><ul>${grade.covered.map(c => `<li>${c}</li>`).join('')}</ul></div>`; if(missedCount>0) html += `<div class="lbl-grade-missed"><p>⚠️ Missed (${missedCount})</p><ul>${grade.missed.map(m => `<li>${m}</li>`).join('')}</ul></div>`; if(coveredCount===0 && missedCount===0) html += `<p style="font-size:0.83rem;color:var(--text-muted);">Could not parse details — check your API key or answer length.</p>`; html += `</div>`; return html; }
+
+            function groupTopicsHierarchy() { const tree = {}; topics.forEach(t => { const cat = t.category || 'General'; const sub = t.subcategory || ''; const subsub = t.subsubcategory || ''; if(!tree[cat]) tree[cat] = {}; if(sub) { if(!tree[cat][sub]) tree[cat][sub] = {}; if(subsub) { if(!tree[cat][sub][subsub]) tree[cat][sub][subsub] = []; tree[cat][sub][subsub].push(t); } else { if(!tree[cat][sub]['_nosubsub']) tree[cat][sub]['_nosubsub'] = []; tree[cat][sub]['_nosubsub'].push(t); } } else { if(!tree[cat]['_nosub']) tree[cat]['_nosub'] = []; tree[cat]['_nosub'].push(t); } }); return tree; }
+
+            function createBlurtNodeAtLevel(cat, sub, subsub) { const name = prompt('Name for this blurt node:', (subsub || sub || cat)); if(!name) return; const newTopic = { id: Date.now(), name: name.trim(), category: cat, subcategory: sub || '', subsubcategory: subsub || '', referenceText:'', highYield:'', blurts:[], gapTracker:{} }; topics.push(newTopic); saveTopics(); renderSidebar(); selectTopic(newTopic.id); }
+
+            function renderSavedSessions() { const sessions = topics.filter(t => t.lblSession && t.lblSession.questions && t.lblSession.questions.length>0); if(sessions.length===0) { savedSessionsDiv.style.display='none'; return; } savedSessionsDiv.style.display='block'; savedSessionsList.innerHTML = ''; sessions.forEach(session => { const total = session.lblSession.questions.length; const current = session.lblSession.currentIndex || 0; const progress = Math.min(current, total); const div = document.createElement('div'); div.className='saved-session-item'; div.innerHTML = `<span>📋 ${session.name}</span><span class="progress-badge">${progress}/${total}</span>`; div.addEventListener('click', () => { currentTopicId = session.id; enterLittleByLittle(); }); savedSessionsList.appendChild(div); }); }
+
+            function renderSidebar() { const tree = groupTopicsHierarchy(); topicListEl.innerHTML = ''; Object.keys(tree).sort().forEach(cat => { const catData = tree[cat]; const isCatCollapsed = collapsedCategories[cat] === true; const catDiv = document.createElement('div'); catDiv.className='category-group'; let innerHtml = ''; Object.keys(catData).filter(k => k!=='_nosub').sort().forEach(sub => { const subData = catData[sub]; const subKey = `${cat}||${sub}`; const isSubCollapsed = collapsedSubcategories[subKey] === true; let subInnerHtml = ''; Object.keys(subData).filter(k => k!=='_nosubsub').sort().forEach(subsub => { const subsubItems = subData[subsub]; const subsubKey = `${cat}||${sub}||${subsub}`; const isSubsubCollapsed = collapsedSubsubcategories[subsubKey] === true; subInnerHtml += `<div class="subsubcategory-group"><div class="subsubcategory-header" data-subsubcat="${subsubKey}"><span>📂 ${subsub}</span><span style="display:flex;align-items:center;gap:6px;"><button class="blurt-level-btn" data-blurt-subsub="${subsubKey}">✏️</button><span>${isSubsubCollapsed?'▶':'▼'}</span></span></div><ul class="subsubcategory-items" style="display:${isSubsubCollapsed?'none':'block'};">${subsubItems.map(topic => `<li class="topic-item${topic.id===currentTopicId?' active':''}" data-id="${topic.id}"><span>${topic.name}</span><span style="display:flex;align-items:center;gap:4px;">${topic.blurts.length?`<span class="badge">${topic.blurts.length}</span>`:''}<button class="delete-btn" data-id="${topic.id}">&times;</button></span></li>`).join('')}</ul></div>`; }); const nosubsubItems = subData['_nosubsub']; if(nosubsubItems) subInnerHtml += `<ul class="subcategory-items">${nosubsubItems.map(topic => `<li class="topic-item${topic.id===currentTopicId?' active':''}" data-id="${topic.id}"><span>${topic.name}</span><span style="display:flex;align-items:center;gap:4px;">${topic.blurts.length?`<span class="badge">${topic.blurts.length}</span>`:''}<button class="delete-btn" data-id="${topic.id}">&times;</button></span></li>`).join('')}</ul>`; innerHtml += `<div class="subcategory-group"><div class="subcategory-header" data-subcat="${subKey}"><span>📂 ${sub}</span><span style="display:flex;align-items:center;gap:6px;"><button class="blurt-level-btn" data-blurt-sub="${subKey}">✏️</button><span>${isSubCollapsed?'▶':'▼'}</span></span></div><div style="display:${isSubCollapsed?'none':'block'};">${subInnerHtml}</div></div>`; }); const noSubItems = catData['_nosub']; if(noSubItems) innerHtml += `<ul class="category-items">${noSubItems.map(topic => `<li class="topic-item${topic.id===currentTopicId?' active':''}" data-id="${topic.id}"><span>${topic.name}</span><span style="display:flex;align-items:center;gap:4px;">${topic.blurts.length?`<span class="badge">${topic.blurts.length}</span>`:''}<button class="delete-btn" data-id="${topic.id}">&times;</button></span></li>`).join('')}</ul>`; catDiv.innerHTML = `<div class="category-header" data-cat="${cat}"><span>📁 ${cat}</span><span style="display:flex;align-items:center;gap:6px;"><button class="blurt-level-btn" data-blurt-cat="${cat}">✏️</button><span>${isCatCollapsed?'▶':'▼'}</span></span></div><div style="display:${isCatCollapsed?'none':'block'};">${innerHtml}</div>`; topicListEl.appendChild(catDiv); const catHeader = catDiv.querySelector('.category-header'); if(catHeader) catHeader.addEventListener('click', (e) => { if(e.target.closest('.blurt-level-btn')) return; const cn = catHeader.dataset.cat; collapsedCategories[cn] = !collapsedCategories[cn]; saveCollapsedCats(); renderSidebar(); }); const catBlurtBtn = catDiv.querySelector('[data-blurt-cat]'); if(catBlurtBtn) catBlurtBtn.addEventListener('click', (e) => { e.stopPropagation(); createBlurtNodeAtLevel(catBlurtBtn.dataset.blurtCat, '', ''); }); catDiv.querySelectorAll('.subcategory-header').forEach(sh => { sh.addEventListener('click', (e) => { if(e.target.closest('.blurt-level-btn')) return; e.stopPropagation(); const sk = sh.dataset.subcat; collapsedSubcategories[sk] = !collapsedSubcategories[sk]; saveCollapsedSubcats(); renderSidebar(); }); const sb = sh.querySelector('[data-blurt-sub]'); if(sb) sb.addEventListener('click', (e) => { e.stopPropagation(); const [c,s] = sb.dataset.blurtSub.split('||'); createBlurtNodeAtLevel(c,s,''); }); }); catDiv.querySelectorAll('.subsubcategory-header').forEach(ssh => { ssh.addEventListener('click', (e) => { if(e.target.closest('.blurt-level-btn')) return; e.stopPropagation(); const ssk = ssh.dataset.subsubcat; collapsedSubsubcategories[ssk] = !collapsedSubsubcategories[ssk]; saveCollapsedSubsubcats(); renderSidebar(); }); const ssb = ssh.querySelector('[data-blurt-subsub]'); if(ssb) ssb.addEventListener('click', (e) => { e.stopPropagation(); const [c,s,ss] = ssb.dataset.blurtSubsub.split('||'); createBlurtNodeAtLevel(c,s,ss); }); }); catDiv.querySelectorAll('.topic-item').forEach(li => { li.addEventListener('click', (e) => { const id = parseInt(li.dataset.id); if(e.target.classList.contains('delete-btn')) { e.stopPropagation(); deleteTopic(id); } else selectTopic(id); }); }); }); renderSavedSessions(); }
+
+            function deleteTopic(id) { if(!confirm('Purge this node and all historical attempts?')) return; topics = topics.filter(t => t.id !== id); if(currentTopicId === id) { currentTopicId = null; topicContent.style.display='none'; noTopic.style.display='block'; } saveTopics(); renderSidebar(); showToast('🗑️ Case deleted'); }
+
+            // ★ Post-process sidebar to add SRS due dots
+            const _origRenderSidebar = renderSidebar;
+            renderSidebar = function() {
+                _origRenderSidebar();
+                // Add due dots to topic items
+                document.querySelectorAll('.topic-item[data-id]').forEach(li => {
+                    const id = parseInt(li.dataset.id);
+                    const topic = getTopic(id);
+                    if(!topic) return;
+                    const nameSpan = li.querySelector('span:first-child');
+                    if(!nameSpan) return;
+                    // Remove any existing dot
+                    const existing = nameSpan.querySelector('.due-dot');
+                    if(existing) existing.remove();
+                    if(isTopicDueToday(topic)) {
+                        const dot = document.createElement('span');
+                        dot.className = 'due-dot';
+                        dot.title = 'Due for review today';
+                        nameSpan.insertBefore(dot, nameSpan.firstChild);
+                    } else if(isTopicNew(topic) && topic.referenceText) {
+                        const dot = document.createElement('span');
+                        dot.className = 'due-dot due-soon';
+                        dot.title = 'Never reviewed yet';
+                        nameSpan.insertBefore(dot, nameSpan.firstChild);
+                    } else if(topic.srs && topic.srs.lastReviewed) {
+                        const dot = document.createElement('span');
+                        dot.className = 'due-dot done';
+                        dot.title = `Last reviewed: ${new Date(topic.srs.lastReviewed).toLocaleDateString()}`;
+                        nameSpan.insertBefore(dot, nameSpan.firstChild);
+                    }
+                });
+                updateTodayPlan();
+            };
+
+            newTopicBtn.addEventListener('click', () => { const name = prompt('Clinical Case Name:'); if(!name) return; const category = prompt('Main Category (e.g., GI):') || 'General'; const subcategory = prompt('Sub‑Category (e.g., Upper GI Bleed):') || ''; const subsubcategory = subcategory ? prompt('Sub‑Sub‑Category (e.g., Variceal):') || '' : ''; const newTopic = { id: Date.now(), name: name.trim(), category: category.trim(), subcategory: subcategory.trim(), subsubcategory: subsubcategory.trim(), referenceText:'', highYield:'', blurts:[], gapTracker:{} }; topics.push(newTopic); saveTopics(); renderSidebar(); selectTopic(newTopic.id); });
+
+            function showRefEditor(show) { refEditor.style.display = show?'block':'none'; refDisplay.style.display = show?'none':'block'; }
+
+            function selectTopic(id) {
+                if(isRecognizing && recognition) recognition.stop();
+                littleByLittleDiv.style.display='none'; topicContent.style.display='block'; noTopic.style.display='none'; currentTopicId = id;
+                const topic = getTopic(id); if(!topic) return; if(!topic.gapTracker) topic.gapTracker = {};
+                let breadcrumb = topic.category; if(topic.subcategory) breadcrumb += ` → ${topic.subcategory}`; if(topic.subsubcategory) breadcrumb += ` → ${topic.subsubcategory}`; breadcrumb += `: ${topic.name}`;
+                topicNameDisplay.textContent = breadcrumb;
+                referenceTextEl.value = topic.referenceText;
+                if(topic.referenceText.trim().length>0) { showRefEditor(false); renderHighYield(topic.highYield); } else showRefEditor(true);
+                blurtInput.value=''; resultArea.innerHTML='';
+                const trackerArea = document.getElementById('gapTrackerArea'); if(trackerArea) trackerArea.innerHTML = renderGapTrackerCard(topic);
+                renderFocusReminder(topic);
+                renderSidebar(); loadHistory(); resetTimer(); blurtInput.focus();
+            }
+
+            function renderHighYield(highYieldText) { if(!highYieldText) { highYieldContainer.innerHTML = '<p style="color:var(--text-muted); font-style:italic;">High‑yield tags not parsed yet.</p>'; return; } const lines = highYieldText.split('\n').filter(l => l.trim()); highYieldContainer.innerHTML = `<div class="high-yield-box"><h4>⭐ Core High-Yield Exam Weights</h4><ul>${lines.map(l => `<li>${l.replace(/^[-*•]\s*/,'')}</li>`).join('')}</ul></div>`; }
+
+            async function extractHighYield(referenceText, retries=2) { const apiKey = apiKeyInput.value.trim(); if(!apiKey) throw new Error('API key missing.'); for(let attempt=0; attempt<=retries; attempt++) { try { const response = await fetch('https://api.deepseek.com/v1/chat/completions', { method:'POST', headers:{ 'Authorization':`Bearer ${apiKey}`, 'Content-Type':'application/json' }, body: JSON.stringify({ model:'deepseek-chat', messages:[{ role:'system', content:'Extract high‑yield, exam‑relevant core findings from the text. Use precise bullet points. Never use **.' }, { role:'user', content:referenceText }], temperature:0.1 }) }); if(!response.ok) throw new Error(`HTTP ${response.status}`); const data = await response.json(); if(data.error) throw new Error(data.error.message); return data.choices[0].message.content; } catch(err) { if(attempt===retries) throw err; await new Promise(r => setTimeout(r, 1000*(attempt+1))); } } }
+
+            saveReferenceBtn.addEventListener('click', async () => { if(!currentTopicId) return; const topic = getTopic(currentTopicId); const newRef = referenceTextEl.value.trim(); if(!newRef) { showToast('⚠️ Please enter reference text'); return; } topic.referenceText = newRef; saveTopics(); showRefEditor(false); highYieldContainer.innerHTML = '<p style="color:var(--color-warning);">⏳ Extracting high‑yield matrices...</p>'; saveReferenceBtn.disabled = true; try { const hy = await extractHighYield(newRef); topic.highYield = hy; saveTopics(); renderHighYield(hy); showToast('✅ High-yield extracted'); } catch(err) { highYieldContainer.innerHTML = `<p style="color:var(--color-danger);">❌ ${err.message}</p>`; showToast('❌ Extraction failed'); } finally { saveReferenceBtn.disabled = false; } });
+
+            editReferenceBtn.addEventListener('click', () => showRefEditor(true));
+            refreshHighYieldBtn.addEventListener('click', async () => { const topic = getTopic(currentTopicId); if(!topic || !topic.referenceText) return; highYieldContainer.innerHTML = '<p style="color:var(--color-warning);">⏳ Re‑extracting...</p>'; refreshHighYieldBtn.disabled = true; try { const hy = await extractHighYield(topic.referenceText); topic.highYield = hy; saveTopics(); renderHighYield(hy); showToast('✅ Highlights refreshed'); } catch(err) { highYieldContainer.innerHTML = `<p style="color:var(--color-danger);">❌ ${err.message}</p>`; } finally { refreshHighYieldBtn.disabled = false; } });
+
+            function updateTimerDisplay() { const mins = Math.floor(timerSeconds/60); const secs = timerSeconds%60; timerDisplay.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`; timerDisplay.classList.remove('warning','danger'); if(timerRunning && timerSeconds<=30) timerDisplay.classList.add('danger'); else if(timerRunning && timerSeconds<=60) timerDisplay.classList.add('warning'); }
+            function resetTimer() { clearInterval(timerInterval); timerRunning = false; timerSeconds = parseInt(timerMinutesInput.value)*60 || 300; updateTimerDisplay(); startTimerBtn.disabled = false; pauseTimerBtn.disabled = true; pauseTimerBtn.textContent = 'Pause'; timerDisplay.classList.remove('warning','danger'); }
+            startTimerBtn.addEventListener('click', () => { if(timerRunning) return; timerRunning = true; startTimerBtn.disabled = true; pauseTimerBtn.disabled = false; timerInterval = setInterval(() => { if(timerSeconds<=0) { clearInterval(timerInterval); timerRunning = false; timerSeconds = 0; updateTimerDisplay(); startTimerBtn.disabled = true; pauseTimerBtn.disabled = true; timerDisplay.classList.add('danger'); showToast('⏰ Time\'s up! Submit your blurt.'); return; } timerSeconds--; updateTimerDisplay(); }, 1000); });
+            pauseTimerBtn.addEventListener('click', () => { if(timerRunning) { clearInterval(timerInterval); timerRunning = false; pauseTimerBtn.textContent = 'Resume'; timerDisplay.classList.remove('warning','danger'); } else { timerRunning = true; pauseTimerBtn.textContent = 'Pause'; timerInterval = setInterval(() => { if(timerSeconds<=0) { clearInterval(timerInterval); timerRunning = false; timerSeconds = 0; updateTimerDisplay(); startTimerBtn.disabled = true; pauseTimerBtn.disabled = true; return; } timerSeconds--; updateTimerDisplay(); }, 1000); } });
+            resetTimerBtn.addEventListener('click', resetTimer);
+            timerMinutesInput.addEventListener('change', () => { if(!timerRunning) { timerSeconds = parseInt(timerMinutesInput.value)*60 || 300; updateTimerDisplay(); } });
+
+            function parseStructuredAnalysis(raw) { const data = { score:'0%', accurate_recall:[], critical_errors:[], clinical_gaps:[], high_yield_missed:[] }; if(!raw || typeof raw !== 'string') return data; const lines = raw.split('\n'); let currentSection = null; for(let line of lines) { line = line.trim(); if(!line) continue; const lower = line.toLowerCase(); if(lower.startsWith('metric_score:')) { data.score = line.replace(/metric_score:\s*/i,'').trim(); continue; } if(lower.startsWith('accurate_recall:')) { currentSection='accurate_recall'; continue; } if(lower.startsWith('critical_clinical_errors:')) { currentSection='critical_errors'; continue; } if(lower.startsWith('omitted_clinical_gaps:')) { currentSection='clinical_gaps'; continue; } if(lower.startsWith('high_yield_missed:')) { currentSection='high_yield_missed'; continue; } if(/^[-*•\d]\s/.test(line) && currentSection) { const cleanItem = line.replace(/^[-*•\d.]\s*/,'').trim(); if(cleanItem) data[currentSection].push(cleanItem); } else if(currentSection && !lower.includes('none') && line.length>2) { data[currentSection].push(line); } } return data; }
+
+            function renderStructuredAnalysis(parsed, title='📋 Clinical Evaluation Dashboard') { const safe = { score: parsed?.score || '0%', accurate_recall: Array.isArray(parsed?.accurate_recall)?parsed.accurate_recall:[], critical_errors: Array.isArray(parsed?.critical_errors)?parsed.critical_errors:[], clinical_gaps: Array.isArray(parsed?.clinical_gaps)?parsed.clinical_gaps:[], high_yield_missed: Array.isArray(parsed?.high_yield_missed)?parsed.high_yield_missed:[] }; const errorCount = safe.critical_errors.filter(e => !e.toLowerCase().includes('none')).length; const gapCount = safe.clinical_gaps.filter(g => !g.toLowerCase().includes('none')).length; const hyMissedCount = safe.high_yield_missed.filter(h => !h.toLowerCase().includes('none')).length; const correctCount = safe.accurate_recall.filter(c => !c.toLowerCase().includes('none')).length; let html = `<div class="analysis-container"><div class="metric-grid"><div class="metric-card score"><p style="font-size:0.78rem;font-weight:700;color:var(--text-muted);">RECALL ACCURACY</p><h1>${safe.score}</h1></div><div class="metric-card danger" style="background:${errorCount>0?'rgba(239,68,68,0.05)':'var(--bg-main)'};"><p style="font-size:0.78rem;font-weight:700;color:var(--text-muted);">CRITICAL SAFETY THREATS</p><h1 style="color:${errorCount>0?'var(--color-danger)':'var(--color-success)'};">${errorCount}</h1></div></div>`; if(correctCount>0) html += `<div class="gap-card accurate-recall"><h4>✅ Accurately Recalled Concepts</h4><ul>${safe.accurate_recall.map(c => `<li>${c.replace(/\*\*/g,'')}</li>`).join('')}</ul></div>`; else html += `<div class="gap-card no-gap" style="border-left-color:var(--color-success);"><h4>✅ Accurately Recalled Concepts</h4><p style="font-size:0.9rem;color:var(--color-success);">No specific correct items identified.</p></div>`; if(hyMissedCount>0) html += `<div class="gap-card high-yield-coverage has-gap"><h4>⭐ High‑Yield Points Missed</h4><ul>${safe.high_yield_missed.map(h => `<li>${h.replace(/\*\*/g,'')}</li>`).join('')}</ul></div>`; else html += `<div class="gap-card high-yield-coverage no-gap"><h4>⭐ High‑Yield Coverage</h4><p style="font-size:0.9rem;color:var(--color-success);">All core high‑yield concepts recalled.</p></div>`; if(errorCount>0) html += `<div class="gap-card critical-error"><h4>🚨 Critical Clinical Errors & Misinformation</h4><ul>${safe.critical_errors.map(e => `<li>${e.replace(/\*\*/g,'')}</li>`).join('')}</ul></div>`; else html += `<div class="gap-card no-gap" style="border-left-color:var(--color-success);"><h4>🛡️ Medical Safety Audit Clean</h4><p style="font-size:0.9rem;color:var(--color-success);">No dangerous mismanagement detected.</p></div>`; if(gapCount>0) html += `<div class="gap-card has-gap"><h4>⚠️ Omitted Information Gaps</h4><ul>${safe.clinical_gaps.map(g => `<li>${g.replace(/\*\*/g,'')}</li>`).join('')}</ul></div>`; else html += `<div class="gap-card no-gap"><h4>✅ Comprehensive Data Retrieval</h4><p style="font-size:0.9rem;color:var(--color-success);">Perfect active capture.</p></div>`; html += `</div>`; return html; }
+
+            async function callDeepSeek(prompt, retries=2) { const apiKey = apiKeyInput.value.trim(); if(!apiKey) throw new Error('API key missing.'); for(let attempt=0; attempt<=retries; attempt++) { try { const response = await fetch('https://api.deepseek.com/v1/chat/completions', { method:'POST', headers:{ 'Authorization':`Bearer ${apiKey}`, 'Content-Type':'application/json' }, body: JSON.stringify({ model:'deepseek-reasoner', messages:[{ role:'system', content:`You are an elite Medical Board Review Examiner auditing a student's recall blurt for USMLE Step 2 CK and OSCE Viva standards.\n\nCRITICAL RULE FOR OSCE: You must strictly penalize vague language. Flag ANY vague, unconfident, or non-specific terminology (e.g., "give fluids", "do a scan", "give antibiotics") under CRITICAL_CLINICAL_ERRORS. They MUST use precise medical terminology (e.g., "administer 1L IV crystalloid", "order non-contrast CT head", "start IV ceftriaxone").\n\nUse this exact syntax:\nMETRIC_SCORE: [0-100%]\nACCURATE_RECALL:\n- [List correct, accurate clinical facts the student recalled. If none, output "None"]\nCRITICAL_CLINICAL_ERRORS: \n- [List dangerous inaccuracies, false statements, OR vague/imprecise terminology. If none, output "None"]\nOMITTED_CLINICAL_GAPS:\n- [List key points from the reference that were missing. If none, output "None"]\nHIGH_YIELD_MISSED:\n- [List high‑yield checklist items the student missed. If none, output "None"]\n\nNever use **. Keep items concise.` }, { role:'user', content:prompt }], temperature:0.1 }) }); if(!response.ok) throw new Error(`HTTP ${response.status}`); const data = await response.json(); if(data.error) throw new Error(data.error.message); return data.choices[0].message.content; } catch(err) { if(attempt===retries) throw err; await new Promise(r => setTimeout(r, 1500*(attempt+1))); } } }
+
+            async function performCheck(blurt) { if(!currentTopicId) return; const topic = getTopic(currentTopicId); if(!topic.referenceText) { showToast('⚠️ Provide reference text first'); return; } if(!blurt.trim()) { showToast('⚠️ Blurt is empty'); return; } checkGapsBtn.disabled = true; checkGapsBtn.textContent = '⏳ Processing Strict Audit...'; resultArea.innerHTML = '<p style="color:var(--accent);">🤔 DeepSeek Pro reasoning (Strict Mode active)...</p>'; let referenceText = topic.referenceText; let highYieldText = topic.highYield || ''; let isAdaptive = false; if(topic.blurts.length>0) { const last = topic.blurts[0]; const prevMissed = [ ...(Array.isArray(last.parsed?.critical_errors)?last.parsed.critical_errors:[]), ...(Array.isArray(last.parsed?.clinical_gaps)?last.parsed.clinical_gaps:[]) ].filter(item => item && !item.toLowerCase().includes('none')); if(prevMissed.length>0) { referenceText = prevMissed.map((p,i) => `${i+1}. ${p}`).join('\n'); isAdaptive = true; } } let prompt = `Compare the REFERENCE STANDARD against the STUDENT DISORGANIZED BLURT. Identify gaps and errors. Ensure language meets OSCE standards.\n\nREFERENCE STANDARD:\n${referenceText}`; if(highYieldText.trim()) prompt += `\n\nHIGH‑YIELD CHECKLIST:\n${highYieldText}`; prompt += `\n\nSTUDENT DISORGANIZED BLURT:\n${blurt}`; try { const raw = await callDeepSeek(prompt); const parsedData = parseStructuredAnalysis(raw); topic.blurts.unshift({ timestamp: Date.now(), blurtText: blurt, analysisRaw: raw, parsed: parsedData, adaptiveMode: isAdaptive }); if(!topic.gapTracker) topic.gapTracker = {}; updateGapTracker(topic, parsedData); saveTopics(); renderSidebar(); const trackerArea = document.getElementById('gapTrackerArea'); if(trackerArea) trackerArea.innerHTML = renderGapTrackerCard(topic); renderFocusReminder(topic); resultArea.innerHTML = renderStructuredAnalysis(parsedData, isAdaptive?'🎯 Targeted Gap Audit':'📋 Clinical Evaluation Dashboard'); const _existingCfPanel = document.getElementById('confidencePanel'); if(_existingCfPanel) _existingCfPanel.remove(); resultArea.appendChild(renderConfidencePanel(currentTopicId)); updateTodayPlan(); loadHistory(); showToast(`✅ Audit complete — ${parsedData.score||'N/A'} accuracy`); } catch(err) { resultArea.innerHTML = `<p style="color:var(--color-danger);">❌ Execution Halt: ${err.message}</p>`; showToast('❌ Audit failed: ' + err.message); } finally { checkGapsBtn.disabled = false; checkGapsBtn.textContent = '🔍 Execute Strict Audit'; } }
+            checkGapsBtn.addEventListener('click', () => performCheck(blurtInput.value));
+
+            function loadHistory() { if(!currentTopicId) return; const topic = getTopic(currentTopicId); const existing = document.getElementById('historyContainer'); if(existing) existing.remove(); const historyDiv = document.createElement('div'); historyDiv.id = 'historyContainer'; historyDiv.style.marginTop = '22px'; historyDiv.innerHTML = '<h4 style="margin-bottom:10px;font-weight:700;font-size:1.05rem;color:var(--text-muted);">📜 Chronological Performance Log</h4>'; if(!topic || topic.blurts.length===0) { historyDiv.innerHTML += '<p style="color:var(--text-muted);font-style:italic;">No attempts logged.</p>'; } else { topic.blurts.forEach((blurt, index) => { const date = new Date(blurt.timestamp).toLocaleString(); const pData = blurt.parsed || parseStructuredAnalysis(blurt.analysisRaw || ''); const historicalUI = renderStructuredAnalysis(pData, `Attempt #${topic.blurts.length - index} Evaluation`); historyDiv.innerHTML += `<div class="history-item"><div class="history-meta"><span>${date} ${blurt.adaptiveMode?'(Adaptive Focus)':'(Full Audit)'}</span><span style="color:var(--accent);font-weight:600;">Accuracy: ${pData.score||'N/A'}</span></div><p style="font-size:0.87rem;color:var(--text-muted);margin-bottom:10px;background:var(--bg-card);padding:7px 10px;border-radius:6px;font-style:italic;">"${blurt.blurtText.slice(0,140)}..."</p>${historicalUI}</div>`; }); } resultArea.appendChild(historyDiv); }
+
+
+            async function generateQuestions(referenceText) {
+                const apiKey = apiKeyInput.value.trim();
+                if(!apiKey) throw new Error('API key missing.');
+                const prompt = `You are dividing the following medical text into sequential active recall checkpoints.
+
+INSTRUCTIONS:
+1. Read the text from start to finish.
+2. Split it into logical sections — aim for one Q/A pair per key concept, paragraph, or clinical point.
+3. You MUST generate multiple questions. A typical passage should yield 5-15 questions.
+4. Use EXACTLY this format with ### as the separator. No numbering. No preamble. Start immediately with Q:
+
+Q: [question]
+A: [model answer]
+###
+Q: [question]
+A: [model answer]
+###
+
+TEXT:
+${referenceText}`;
+                const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                    method:'POST',
+                    headers:{ 'Authorization':`Bearer ${apiKey}`, 'Content-Type':'application/json' },
+                    body: JSON.stringify({
+                        model:'deepseek-chat',
+                        messages:[
+                            { role:'system', content:'You are an elite medical educator. Output ONLY Q/A pairs in the exact format given — no preamble, no numbering, no extra commentary. Every paragraph must produce at least one Q/A pair.' },
+                            { role:'user', content:prompt }
+                        ],
+                        temperature:0.2,
+                        max_tokens:4000
+                    })
+                });
+                if(!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                if(data.error) throw new Error(data.error.message);
+                return data.choices[0].message.content;
+            }
+
+            async function generateMCQs(referenceText) { const apiKey = apiKeyInput.value.trim(); if(!apiKey) throw new Error('API key missing.'); const prompt = `Read the following lecture text carefully. Extract all high‑yield, easily forgotten, niche, and clinically decisive facts.\n\nRules:\n1. Never miss any specific number, percentage, age cut‑off, incubation period, serology sequence, or treatment detail explicitly stated in the text.\n2. For every diagnosis, include the test hierarchy (initial → confirmatory → gold standard) if mentioned.\n3. Highlight age‑specific aetiologies, rare but classic associations, and commonly mixed‑up distinctions.\n4. If the text mentions a negative finding that rules something out, include it as a niche trap.\n5. Pay special attention to exceptions to common rules, normal variants mistaken as pathology, and statements that something is NOT effective or NOT indicated.\n\nNow, using ONLY the facts from the text, create 5 high‑quality, tricky MCQs. Each MCQ should have 4 answer options (A, B, C, D) with one correct answer.\n\nFormat:\nQ1: [question]\nA) ...\nB) ...\nC) ...\nD) ...\nCorrect Answer: [letter]\n\nQ2: ... etc.\n\nTEXT:\n${referenceText}`; const response = await fetch('https://api.deepseek.com/v1/chat/completions', { method:'POST', headers:{ 'Authorization':`Bearer ${apiKey}`, 'Content-Type':'application/json' }, body: JSON.stringify({ model:'deepseek-chat', messages:[{ role:'system', content:'You are a ruthless Board Examiner writing extremely tricky, discriminator MCQs based solely on the provided text.' }, { role:'user', content:prompt }], temperature:0.3 }) }); if(!response.ok) throw new Error(`HTTP ${response.status}`); const data = await response.json(); if(data.error) throw new Error(data.error.message); return data.choices[0].message.content; }
+
+            function parseQuestions(raw) {
+                const questions = [];
+                if(!raw) return questions;
+
+                // Strategy 1: split on ### (new preferred format)
+                let blocks = raw.split(/###/).map(b => b.trim()).filter(Boolean);
+
+                // Strategy 2: split on --- (old format)
+                if(blocks.length <= 1) {
+                    const dashes = raw.split(/\n---+\n?/).map(b => b.trim()).filter(Boolean);
+                    if(dashes.length > 1) blocks = dashes;
+                }
+
+                // Strategy 3: split before every line starting with Q:
+                if(blocks.length <= 1) {
+                    const qsplit = raw.split(/\n(?=Q:)/i).map(b => b.trim()).filter(Boolean);
+                    if(qsplit.length > 1) blocks = qsplit;
+                }
+
+                for(let block of blocks) {
+                    if(!block) continue;
+                    const qMatch = block.match(/Q:\s*(.+?)(?:\n|$)/i);
+                    const aMatch = block.match(/A:\s*([\s\S]+)/i);
+                    if(qMatch && aMatch) {
+                        const answer = aMatch[1].split(/\nQ:/i)[0].trim();
+                        if(qMatch[1].trim() && answer) {
+                            questions.push({ question: qMatch[1].trim(), answer });
+                        }
+                    }
+                }
+                return questions;
+            }
+
+            function clearLBLResetContainer() { const container = document.getElementById('lblResetContainer'); if(container) container.innerHTML = ''; }
+
+            function enterLittleByLittle() {
+                if(!currentTopicId) { showToast('⚠️ Please select or create a clinical case from the sidebar first.'); return; }
+                if(isRecognizing && recognition) recognition.stop();
+                topicContent.style.display='none'; noTopic.style.display='none'; littleByLittleDiv.style.display='block';
+                const topic = getTopic(currentTopicId); clearLBLResetContainer();
+                if(topic.lblSession && topic.lblSession.questions && topic.lblSession.questions.length>0) {
+                    lblQuestions = topic.lblSession.questions; lblCurrentIndex = topic.lblSession.currentIndex || 0; lblReferenceText = topic.referenceText;
+                    lblReference.value = topic.referenceText; lblReference.style.display='none';
+                    startLittleByLittleBtn.style.display='none'; if(loadCurrentRefBtn) loadCurrentRefBtn.style.display='none';
+                    const container = document.getElementById('lblResetContainer'); if(!container) return;
+                    const showRefBtn = document.createElement('button'); showRefBtn.className='btn-secondary'; showRefBtn.style.flex='1'; showRefBtn.textContent='📝 Edit Reference';
+                    showRefBtn.onclick = () => { lblReference.style.display = (lblReference.style.display==='none')?'block':'none'; }; container.appendChild(showRefBtn);
+                    const restartBtn = document.createElement('button'); restartBtn.className='btn-secondary'; restartBtn.style.flex='1'; restartBtn.textContent='🔄 Restart from Beginning';
+                    restartBtn.onclick = () => { lblCurrentIndex = 0; if(topic.lblSession) { topic.lblSession.currentIndex = 0; saveTopics(); } renderQuestion(); }; container.appendChild(restartBtn);
+                    const regenBtn = document.createElement('button'); regenBtn.className='btn-secondary'; regenBtn.style.flex='1'; regenBtn.style.borderColor='var(--color-warning)'; regenBtn.style.color='var(--color-warning)'; regenBtn.textContent='♻️ Regenerate Questions';
+                    regenBtn.onclick = async () => { if(!topic.referenceText) { showToast('⚠️ No reference text in this topic.'); return; } regenBtn.disabled = true; regenBtn.textContent = '⏳ Regenerating...'; try { const raw = await generateQuestions(topic.referenceText); const questions = parseQuestions(raw); if(questions.length===0) throw new Error('No questions parsed.'); topic.lblSession = { questions, currentIndex:0, mcqText:null }; saveTopics(); enterLittleByLittle(); } catch(err) { showToast('❌ Error: ' + err.message); } finally { regenBtn.disabled = false; regenBtn.textContent='♻️ Regenerate Questions'; } }; container.appendChild(regenBtn);
+                    const deleteBtn = document.createElement('button'); deleteBtn.className='btn-secondary'; deleteBtn.style.flex='1'; deleteBtn.style.borderColor='var(--color-danger)'; deleteBtn.style.color='var(--color-danger)'; deleteBtn.textContent='🗑️ Delete Progress & Restart';
+                    deleteBtn.onclick = () => { if(confirm('Are you sure you want to purge your Little by Little progress for this case?')) { topic.lblSession = null; saveTopics(); enterLittleByLittle(); } }; container.appendChild(deleteBtn);
+                    lblSessionArea.style.display='block'; lblExtraArea.innerHTML=''; renderQuestion();
+                } else {
+                    lblQuestions = []; lblCurrentIndex = 0; lblReference.style.display='block'; lblSessionArea.style.display='none'; lblExtraArea.innerHTML=''; lblReference.value = topic.referenceText || ''; startLittleByLittleBtn.style.display='inline-flex'; if(loadCurrentRefBtn) loadCurrentRefBtn.style.display='inline-flex';
+                }
+            }
+            littleByLittleBtn.addEventListener('click', () => enterLittleByLittle());
+            if(loadCurrentRefBtn) loadCurrentRefBtn.addEventListener('click', () => { if(currentTopicId) { const topic = getTopic(currentTopicId); if(topic && topic.referenceText) lblReference.value = topic.referenceText; else showToast('⚠️ Current topic has no reference text.'); } });
+
+            // ⭐ Delegated event listener for Generate Niche MCQs button
+            lblExtraArea.addEventListener('click', async function(e) {
+                const btn = e.target.closest('#generateMCQBtn');
+                if (!btn || btn.disabled) return;
+                
+                btn.disabled = true;
+                const originalText = btn.textContent;
+                btn.textContent = '⏳ Writing Tricky MCQs...';
+                
+                let refText = lblReferenceText;
+                if (!refText) {
+                    const topic = currentTopicId ? getTopic(currentTopicId) : null;
+                    if (topic) refText = topic.referenceText;
+                }
+                if (!refText) {
+                    showToast('⚠️ No reference text available');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    return;
+                }
+
+                try {
+                    const mcqText = await generateMCQs(refText);
+                    let parsed = parseMCQText(mcqText);
+                    let mcqResultDiv = document.getElementById('mcqResult');
+                    
+                    // If parsing yielded nothing, show raw text
+                    if (!parsed || parsed.length === 0) {
+                        if (mcqResultDiv) {
+                            mcqResultDiv.innerHTML = `<div style="background:var(--bg-main); padding:16px; border:1px solid var(--border); border-radius:6px;"><p style="color:var(--color-warning); margin-bottom:10px;">⚠️ Could not parse interactive quiz — displaying raw AI output:</p><pre style="white-space:pre-wrap; font-family:inherit; font-size:0.93rem; color:var(--text-main);">${mcqText}</pre></div>`;
+                        }
+                        return;
+                    }
+                    
+                    if (mcqResultDiv) mcqResultDiv.innerHTML = renderInteractiveMCQ(parsed);
+                    
+                    // Save to topic session
+                    const topic = currentTopicId ? getTopic(currentTopicId) : null;
+                    if (topic && topic.lblSession) {
+                        topic.lblSession.mcqText = mcqText;
+                        saveTopics();
+                        renderSidebar();
+                    }
+                    btn.textContent = '🧪 Regenerate Niche MCQs';
+                } catch (err) {
+                    const mcqResultDiv = document.getElementById('mcqResult');
+                    if (mcqResultDiv) mcqResultDiv.innerHTML = `<p style="color:var(--color-danger);">❌ Execution Failed: ${err.message}</p>`;
+                    btn.textContent = originalText;
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+
+            function renderQuestion() {
+                if(isRecognizing && recognition) recognition.stop();
+                const topic = currentTopicId ? getTopic(currentTopicId) : null;
+                if(lblCurrentIndex >= lblQuestions.length) {
+                    lblProgressBar.style.width='100%'; lblQuestionContainer.innerHTML = '<h4>🎉 Active Recall Complete!</h4><p style="color:var(--text-muted);margin-top:8px;">You have worked through the entire text.</p>';
+                    lblExtraArea.innerHTML = `<div style="background:rgba(99,102,241,0.1);border:1px solid var(--accent);padding:16px;border-radius:8px;margin-top:22px;"><h4 style="color:var(--accent);margin-bottom:8px;">🔥 The EXTRAS: Niche & Trap MCQs</h4><p style="font-size:0.87rem;color:#cbd5e1;margin-bottom:14px;">Test your grasp on the easily forgotten details, negative findings, and clinical exceptions hidden in the text.</p><button class="btn-primary" id="generateMCQBtn" style="width:100%;justify-content:center;">🧪 Generate Niche MCQs</button></div><div id="mcqResult" style="margin-top:14px;"></div><button class="btn-secondary" id="restartBtn" style="margin-top:8px;width:100%;">🔄 Restart from Beginning</button>`;
+                    if(topic && topic.lblSession && topic.lblSession.mcqText) { const parsed = parseMCQText(topic.lblSession.mcqText); const mcqResultDiv = document.getElementById('mcqResult'); if(mcqResultDiv) mcqResultDiv.innerHTML = parsed.length ? renderInteractiveMCQ(parsed) : `<div style="background:var(--bg-main); padding:16px; border:1px solid var(--border); border-radius:6px;"><p style="color:var(--color-warning); margin-bottom:10px;">⚠️ Could not parse saved quiz — displaying raw output:</p><pre style="white-space:pre-wrap; font-family:inherit; font-size:0.93rem; color:var(--text-main);">${topic.lblSession.mcqText}</pre></div>`; const genBtn = document.getElementById('generateMCQBtn'); if(genBtn) genBtn.textContent = '🧪 Regenerate Niche MCQs'; }
+                    const restartBtn = document.getElementById('restartBtn'); if(restartBtn) restartBtn.addEventListener('click', () => { lblCurrentIndex = 0; if(topic && topic.lblSession) { topic.lblSession.currentIndex = 0; saveTopics(); } renderQuestion(); });
+                    return;
+                }
+                const q = lblQuestions[lblCurrentIndex];
+                const progress = (lblCurrentIndex / lblQuestions.length)*100; lblProgressBar.style.width = `${progress}%`;
+                const savedAnswer = q.userAnswer || '';
+                lblQuestionContainer.innerHTML = `
+                    <div class="question-card">
+                        <h4 style="color:var(--text-muted);margin-bottom:10px;">Checkpoint ${lblCurrentIndex+1} of ${lblQuestions.length}</h4>
+                        <p style="font-size:1.1rem;font-weight:600;margin:0 0 14px 0;">${q.question}</p>
+                        <div class="mic-row">
+                            <button class="btn-icon" id="lblMicBtn" title="Dictate answer">🎤</button>
+                            <span id="lblMicStatus" class="mic-status"></span>
+                        </div>
+                        <textarea id="userAnswer" rows="4" placeholder="Draft your answer from memory before revealing..." style="width:100%;background:var(--bg-main);border:1px solid var(--border);color:white;padding:11px;border-radius:6px;font-family:inherit;font-size:0.93rem;">${savedAnswer}</textarea>
+                        <button class="btn-primary" id="showAnswerBtn" style="margin-top:10px;">👁 Reveal & Grade My Answer</button>
+                        <div id="lblGradeResult" style="display:none;"></div>
+                        <div id="modelAnswer" style="display:none;margin-top:14px;padding:14px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);border-radius:8px;">
+                            <p style="color:var(--color-success);font-weight:700;margin-bottom:7px;">💡 Core Concept Validation:</p>
+                            <p style="line-height:1.5;">${q.answer}</p>
+                        </div>
+                        <button class="btn-secondary" id="nextBtn" style="display:none;margin-top:14px;width:100%;">Proceed to Next Section →</button>
+                    </div>`;
+
+                const lblMicBtn = document.getElementById('lblMicBtn');
+                const userAnswerEl = document.getElementById('userAnswer');
+                if(lblMicBtn && userAnswerEl) {
+                    lblMicBtn.addEventListener('click', () => { startSpeechFor(userAnswerEl); });
+                }
+
+                const showAnswerBtn = document.getElementById('showAnswerBtn');
+                const nextBtn = document.getElementById('nextBtn');
+                if(showAnswerBtn) showAnswerBtn.addEventListener('click', async () => {
+                    if(isRecognizing && recognition) recognition.stop();
+                    const userAnswer = document.getElementById('userAnswer')?.value.trim() || '';
+                    const gradeDiv = document.getElementById('lblGradeResult');
+                    const modelDiv = document.getElementById('modelAnswer');
+                    if(modelDiv) modelDiv.style.display='block'; if(showAnswerBtn) showAnswerBtn.style.display='none';
+                    if(!userAnswer) { if(nextBtn) nextBtn.style.display='block'; return; }
+                    if(gradeDiv) { gradeDiv.style.display='block'; gradeDiv.innerHTML = '<p style="color:var(--accent);font-size:0.85rem;padding:9px 0;">⏳ Grading your answer...</p>'; }
+                    try {
+                        const raw = await gradeLBLAnswer(q.question, q.answer, userAnswer);
+                        const grade = parseLBLGrade(raw);
+                        lblQuestions[lblCurrentIndex].userAnswer = userAnswer; lblQuestions[lblCurrentIndex].grade = grade;
+                        if(topic && topic.lblSession) { topic.lblSession.questions[lblCurrentIndex] = lblQuestions[lblCurrentIndex]; }
+                        if(grade.missed.length>0 && topic) { if(!topic.gapTracker) topic.gapTracker = {}; updateGapTracker(topic, { critical_errors:[], clinical_gaps:grade.missed, high_yield_missed:[] }); }
+                        saveTopics(); if(gradeDiv) gradeDiv.innerHTML = renderLBLGrade(grade);
+                    } catch(err) { if(gradeDiv) gradeDiv.innerHTML = `<p style="color:var(--color-warning);font-size:0.82rem;padding:7px 0;">⚠️ Grading failed: ${err.message}</p>`; }
+                    finally { if(nextBtn) nextBtn.style.display='block'; }
+                });
+                if(nextBtn) nextBtn.addEventListener('click', () => {
+                    if(isRecognizing && recognition) recognition.stop();
+                    lblCurrentIndex++; if(topic && topic.lblSession) { topic.lblSession.currentIndex = lblCurrentIndex; saveTopics(); renderSidebar(); } renderQuestion();
+                });
+            }
+
+            startLittleByLittleBtn.addEventListener('click', async () => { if(!currentTopicId) return; const topic = getTopic(currentTopicId); const refText = lblReference.value.trim(); if(!refText) { showToast('⚠️ Paste a reference text first.'); return; } lblReferenceText = refText; startLittleByLittleBtn.disabled = true; startLittleByLittleBtn.textContent = '⏳ Slicing logic checkpoints...'; try { const raw = await generateQuestions(refText); lblQuestions = parseQuestions(raw); if(lblQuestions.length===0) throw new Error('No questions could be parsed. Ensure the text is long enough.'); lblCurrentIndex = 0; topic.lblSession = { questions: lblQuestions, currentIndex: lblCurrentIndex, mcqText: null }; saveTopics(); renderSidebar(); enterLittleByLittle(); } catch(err) { showToast('❌ Error: ' + err.message); } finally { startLittleByLittleBtn.disabled = false; startLittleByLittleBtn.textContent = '🚀 Start Session'; } });
+
+            // ══════════════════════════════════════════════════
+            //  ★ EXAM COUNTDOWN
+            // ══════════════════════════════════════════════════
+            const examDateInput = document.getElementById('examDateInput');
+            const editExamDateBtn = document.getElementById('editExamDateBtn');
+            const todayPlanCount = document.getElementById('todayPlanCount');
+            const todayPlanSub = document.getElementById('todayPlanSub');
+            const dueChip = document.getElementById('dueChip');
+            const dueIcon = document.getElementById('dueIcon');
+            const examChip = document.getElementById('examChip');
+            const blurtChip = document.getElementById('blurtChip');
+            const blurtsToday = document.getElementById('blurtsToday');
+            const interleavedBtn = document.getElementById('interleavedBtn');
+
+            function getExamDate() {
+                const stored = localStorage.getItem('exam_date');
+                if(stored) return new Date(stored);
+                const d = new Date();
+                d.setDate(d.getDate() + 6);
+                d.setHours(9, 0, 0, 0);
+                return d;
+            }
+            function saveExamDate(d) { localStorage.setItem('exam_date', d.toISOString()); }
+
+            function updateCountdown() {
+                const exam = getExamDate();
+                const now = new Date();
+                const diffMs = exam - now;
+                const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                const daysEl = document.getElementById('examCdDays');
+                if(daysEl) daysEl.textContent = diffDays > 0 ? diffDays : '0';
+                examChip.classList.remove('urgent', 'warning');
+                if(diffDays <= 2) examChip.classList.add('urgent');
+                else if(diffDays <= 4) examChip.classList.add('warning');
+                examDateInput.value = exam.toISOString().split('T')[0];
+            }
+
+            editExamDateBtn.addEventListener('click', () => {
+                examDateInput.style.display = examDateInput.style.display === 'none' ? 'block' : 'none';
+            });
+            examDateInput.addEventListener('change', () => {
+                const d = new Date(examDateInput.value);
+                d.setHours(9, 0, 0, 0);
+                saveExamDate(d);
+                updateCountdown();
+                examDateInput.style.display = 'none';
+                showToast('📅 Exam date saved');
+            });
+
+            // ══════════════════════════════════════════════════
+            //  ★ SRS ENGINE
+            // ══════════════════════════════════════════════════
+            const SRS_INTERVALS = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 7 }; // days per confidence level
+
+            function startOfDay(date) {
+                const d = new Date(date);
+                d.setHours(0,0,0,0);
+                return d;
+            }
+
+            function isTopicDueToday(topic) {
+                if(!topic.srs || !topic.srs.nextReview) return false;
+                const nextReview = new Date(topic.srs.nextReview);
+                return startOfDay(nextReview) <= startOfDay(new Date());
+            }
+
+            function isTopicNew(topic) {
+                return !topic.srs || !topic.srs.lastReviewed;
+            }
+
+            function updateTopicSRS(topicId, confidenceLevel) {
+                const topic = getTopic(topicId);
+                if(!topic) return;
+                if(!topic.srs) topic.srs = {};
+                const intervalDays = SRS_INTERVALS[confidenceLevel] || 2;
+                const next = new Date();
+                next.setDate(next.getDate() + intervalDays);
+                next.setHours(0,0,0,0);
+                topic.srs.confidence = confidenceLevel;
+                topic.srs.lastReviewed = Date.now();
+                topic.srs.nextReview = next.getTime();
+                topic.srs.intervalDays = intervalDays;
+                topic.srs.totalReviews = (topic.srs.totalReviews || 0) + 1;
+                saveTopics();
+                renderSidebar();
+                updateTodayPlan();
+            }
+
+            function renderConfidencePanel(topicId) {
+                const panel = document.createElement('div');
+                panel.className = 'confidence-panel';
+                panel.id = 'confidencePanel';
+                const labels = ['😰 Blackout', '😟 Hard', '😐 OK', '😊 Easy', '🤩 Perfect'];
+                const sublabels = ['Review tomorrow', 'Review tomorrow', 'Review in 2d', 'Review in 4d', 'Review in 7d'];
+                panel.innerHTML = `
+                    <h4>🧠 How well did you know this?</h4>
+                    <p>Rate your recall to schedule the next review (spaced repetition)</p>
+                    <div class="confidence-btns">
+                        ${labels.map((l,i) => `<button class="confidence-btn" data-level="${i+1}" data-topic="${topicId}">
+                            <span class="cf-emoji">${l.split(' ')[0]}</span>
+                            <span>${l.split(' ').slice(1).join(' ')}</span>
+                            <span style="font-size:0.65rem;color:var(--text-muted);font-weight:400;">${sublabels[i]}</span>
+                        </button>`).join('')}
+                    </div>
+                    <div class="next-review-label" id="nextReviewLabel"></div>`;
+                return panel;
+            }
+
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('.confidence-btn');
+                if(!btn) return;
+                const level = parseInt(btn.dataset.level);
+                const topicId = btn.dataset.topic;
+                document.querySelectorAll('.confidence-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                updateTopicSRS(topicId, level);
+                const nextLabel = document.getElementById('nextReviewLabel');
+                if(nextLabel) {
+                    const days = SRS_INTERVALS[level];
+                    nextLabel.textContent = days <= 1 ? '📅 Scheduled for review tomorrow' : `📅 Next review in ${days} days`;
+                    nextLabel.style.display = 'block';
+                }
+                showToast('✅ Confidence saved — review scheduled');
+            });
+
+            // ══════════════════════════════════════════════════
+            //  ★ TODAY'S PLAN + DAILY STATS
+            // ══════════════════════════════════════════════════
+            function getTodayBlurts() {
+                const todayStart = startOfDay(new Date()).getTime();
+                let count = 0, totalScore = 0, scoredCount = 0;
+                topics.forEach(t => {
+                    if(t.blurts) t.blurts.forEach(b => {
+                        if(b.timestamp >= todayStart) {
+                            count++;
+                            if(b.parsed && b.parsed.score) {
+                                const pct = parseInt(b.parsed.score);
+                                if(!isNaN(pct)) { totalScore += pct; scoredCount++; }
+                            }
+                        }
+                    });
+                });
+                return { count, avgScore: scoredCount > 0 ? Math.round(totalScore/scoredCount) : null };
+            }
+
+            function updateTodayPlan() {
+                const dueTopics = topics.filter(t => isTopicDueToday(t));
+                const newTopics = topics.filter(t => isTopicNew(t) && t.referenceText);
+                const total = dueTopics.length;
+                const stats = getTodayBlurts();
+
+                // Due chip
+                if(total > 0) {
+                    todayPlanCount.textContent = total;
+                    todayPlanSub.textContent = 'due today';
+                    dueChip.classList.add('has-due');
+                    if(dueIcon) dueIcon.textContent = '⚠️';
+                } else if(newTopics.length > 0) {
+                    todayPlanCount.textContent = newTopics.length;
+                    todayPlanSub.textContent = 'unreviewed';
+                    dueChip.classList.remove('has-due');
+                    if(dueIcon) dueIcon.textContent = '🆕';
+                } else {
+                    todayPlanCount.textContent = '✓';
+                    todayPlanSub.textContent = 'all done';
+                    dueChip.classList.remove('has-due');
+                    if(dueIcon) dueIcon.textContent = '✅';
+                }
+
+                // Blurts-today chip
+                if(stats.count > 0) {
+                    if(blurtChip) blurtChip.style.display = 'flex';
+                    if(blurtsToday) blurtsToday.textContent = stats.avgScore !== null ? stats.avgScore + '%' : stats.count;
+                    const blurtLabel = blurtChip ? blurtChip.querySelector('.sc-label') : null;
+                    if(blurtLabel) blurtLabel.textContent = stats.avgScore !== null ? 'avg score' : 'blurts';
+                } else {
+                    if(blurtChip) blurtChip.style.display = 'none';
+                }
+            }
+
+            // ══════════════════════════════════════════════════
+            //  ★ INTERLEAVED PRACTICE MODE
+            // ══════════════════════════════════════════════════
+            const interleavedDiv = document.createElement('div');
+            interleavedDiv.id = 'interleavedMode';
+            interleavedDiv.style.display = 'none';
+            document.querySelector('.main').appendChild(interleavedDiv);
+
+            function pickInterleavedTopic() {
+                // Priority: overdue > due today > new > all
+                const overdue = topics.filter(t => isTopicDueToday(t) && t.referenceText);
+                const newTopics = topics.filter(t => isTopicNew(t) && t.referenceText);
+                const pool = overdue.length > 0 ? overdue : newTopics.length > 0 ? newTopics : topics.filter(t => t.referenceText);
+                if(pool.length === 0) return null;
+                return pool[Math.floor(Math.random() * pool.length)];
+            }
+
+            interleavedBtn.addEventListener('click', () => {
+                if(isRecognizing && recognition) recognition.stop();
+                topicContent.style.display = 'none';
+                noTopic.style.display = 'none';
+                littleByLittleDiv.style.display = 'none';
+                interleavedDiv.style.display = 'block';
+
+                const topic = pickInterleavedTopic();
+                if(!topic) {
+                    interleavedDiv.innerHTML = `<div class="card" style="text-align:center;margin-top:40px;">
+                        <h3 style="margin-bottom:10px;">🎲 Interleaved Practice</h3>
+                        <p style="color:var(--text-muted);">No topics with reference text yet. Create and save some cases first!</p>
+                    </div>`;
+                    return;
+                }
+
+                const srsStatus = isTopicNew(topic) ? '🆕 New topic' : isTopicDueToday(topic) ? '🔴 Due today' : '✅ Review';
+                interleavedDiv.innerHTML = `<div class="interleaved-panel">
+                    <h3>🎲 Interleaved Practice</h3>
+                    <p>Test yourself on a random due topic without choosing. Combats the familiarity illusion.</p>
+                    <div class="interleaved-topic-chip">${srsStatus} · ${topic.name}</div>
+                    <br>
+                    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                        <button class="btn-primary" id="interleavedStartBlurt">✍️ Start Blurt</button>
+                        <button class="btn-secondary" id="interleavedLBL">📖 Little by Little</button>
+                        <button class="btn-secondary" id="interleavedSkip">⏭️ Skip — Next Topic</button>
+                    </div>
+                </div>`;
+
+                document.getElementById('interleavedStartBlurt').onclick = () => {
+                    interleavedDiv.style.display = 'none';
+                    selectTopic(topic.id);
+                    blurtInput.focus();
+                };
+                document.getElementById('interleavedLBL').onclick = () => {
+                    interleavedDiv.style.display = 'none';
+                    selectTopic(topic.id);
+                    enterLittleByLittle();
+                };
+                document.getElementById('interleavedSkip').onclick = () => interleavedBtn.click();
+            });
+
+            initSpeechRecognition();
+            renderSidebar();
+            updateCountdown();
+            updateTodayPlan();
+            setInterval(updateCountdown, 60000); // refresh every minute
+            if(topics.length > 0) selectTopic(topics[0].id);
+            resetTimer();
+        })();
+    </script>
+</body>
+</html>
